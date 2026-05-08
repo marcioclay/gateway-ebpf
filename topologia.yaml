@@ -1,0 +1,42 @@
+name: mqtt-ebpf-lab
+
+topology:
+  nodes:
+    # O Atacante: gera DDoS e Slow DoS
+    attacker:
+      kind: linux
+      image: nicolaka/netshoot # Já vem com hping3, scapy, etc.
+      resources:
+        cpu: 1
+        memory: 512M
+
+    # O Gateway: Onde o seu código eBPF/XDP será injetado
+    gateway:
+      kind: linux
+      image: ubuntu:22.04
+      binds:
+        - ./ebpf-code:/src # Pasta com seu código C e headers do kernel
+      resources:
+        cpu: 1
+        memory: 1G # Mais memória para os Mapas eBPF e logs
+
+    # O Broker: O alvo protegido
+    broker:
+      kind: linux
+      image: eclipse-mosquitto:latest
+      resources:
+        cpu: 1
+        memory: 512M
+
+    # Sensor Legítimo: Para medir latência durante o ataque
+    sensor:
+      kind: linux
+      image: python:3.10-slim
+      resources:
+        cpu: 0.5
+        memory: 256M
+
+  links:
+    - endpoints: ["attacker:eth1", "gateway:eth1"]
+    - endpoints: ["sensor:eth1", "gateway:eth2"]
+    - endpoints: ["gateway:eth3", "broker:eth1"]
