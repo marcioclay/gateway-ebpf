@@ -2,41 +2,35 @@ name: mqtt-ebpf-lab
 
 topology:
   nodes:
-    # O Atacante: gera DDoS e Slow DoS
     attacker:
       kind: linux
-      image: nicolaka/netshoot # hping3.
-      resources:
-        cpu: 1
-        memory: 512M
+      image: nicolaka/netshoot
+      mgmt-ipv4: 172.20.20.10 # IP de gerência
+      # eth1 será configurada manualmente via comando ou script
 
-    # O Gateway:código eBPF/XDP
     gateway:
       kind: linux
       image: ubuntu:22.04
       binds:
-        - ./ebpf-code:/src # código C e headers do kernel
+        - ./ebpf-code:/src
       resources:
         cpu: 1
-        memory: 1Gb # memória para os Mapas eBPF e logs
+        memory: 1G
 
-    # O Broker: O alvo protegido
     broker:
       kind: linux
       image: eclipse-mosquitto:latest
-      resources:
-        cpu: 1
-        memory: 512M
 
-    # Sensor Legítimo: medir latência durante o ataque
     sensor:
       kind: linux
       image: python:3.10-slim
-      resources:
-        cpu: 0.5
-        memory: 256M
 
   links:
+    # Rede do Atacante (10.0.1.0/24)
     - endpoints: ["attacker:eth1", "gateway:eth1"]
+    
+    # Rede dos Sensores (10.0.2.0/24)
     - endpoints: ["sensor:eth1", "gateway:eth2"]
+    
+    # Rede do Broker (192.168.1.0/24) - Simbolizando a rede interna protegida
     - endpoints: ["gateway:eth3", "broker:eth1"]
