@@ -25,15 +25,8 @@ Este laboratório demonstra um recurso muito poderoso do kernel Linux: o **XDP (
 ## Topologia
 
 ```
-┌─────────────────────────────────────────┐
-│               Máquina Host              │
-│                                         │
-│  ┌──────────┐ eth1   eth1 ┌──────────┐  │
-│  │  node-a  ├─────────────┤  node-b  │  │
-│  │10.0.0.1  │             │10.0.0.2  │  │
-│  └──────────┘             └──────────┘  │
-│    (emissor)            (filtro XDP)    │
-└─────────────────────────────────────────┘
+<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/968a6a3d-12ff-4bf2-a99d-d45c1fd3ff28" />
+
 ```
 - node-a: Máquina Linux usando a imagem nicolaka/netshoot (distro focada em ferramentas de rede).
 - node-b: Máquina Linux nicolaka/netshoot com um bind, montando o arquivo xdp_drop.o do host diretamente para a raiz do container (/xdp_drop.o).
