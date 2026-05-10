@@ -37,6 +37,8 @@ Este laboratório demonstra um recurso muito poderoso do kernel Linux: o **XDP (
 |--------|-------------|---------------------------------------------|
 | node-a | `10.0.0.1`  | Emissor de pacotes (origem do ping)         |
 | node-b | `10.0.0.2`  | Filtro XDP — descarta pacotes ICMP          |
+| node-c | `10.0.0.2`  | Filtro XDP — descarta pacotes ICMP          |
+| node-d | `10.0.0.2`  | Filtro XDP — descarta pacotes ICMP          |
 
 ---
 
