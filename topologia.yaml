@@ -1,36 +1,33 @@
-name: mqtt-ebpf-lab
+name: ebpf-mqtt-lab
 
 topology:
   nodes:
-    attacker:
-      kind: linux
-      image: nicolaka/netshoot
-      mgmt-ipv4: 172.20.20.10 # IP de gerência
-      # eth1 será configurada manualmente via comando ou script
-
-    gateway:
+    # VÍTIMA: O Gateway que roda o Mosquitto + eBPF/XDP
+    victim:
       kind: linux
       image: ubuntu:22.04
       binds:
         - ./ebpf-code:/src
-      resources:
-        cpu: 1
-        memory: 1G
+      exec:
+        - apt-get update && apt-get install -y mosquitto
+        - ip addr add 10.0.0.1/24 dev eth1
+        - service mosquitto start
 
-    broker:
+    # ATACANTE: Nó comprometido que gera o Flood
+    attacker:
       kind: linux
-      image: eclipse-mosquitto:latest
+      image: nicolaka/netshoot
+      exec:
+        - ip addr add 10.0.0.10/24 dev eth1
 
-    sensor:
+    # CLIENTE BENIGNO: Sensor legítimo para medir latência/disponibilidade
+    client:
       kind: linux
-      image: python:3.10-slim
+      image: nicolaka/netshoot
+      exec:
+        - ip addr add 10.0.0.20/24 dev eth1
 
   links:
-    # Rede do Atacante (10.0.1.0/24)
-    - endpoints: ["attacker:eth1", "gateway:eth1"]
-    
-    # Rede dos Sensores (10.0.2.0/24)
-    - endpoints: ["sensor:eth1", "gateway:eth2"]
-    
-    # Rede do Broker (192.168.1.0/24) - Simbolizando a rede interna protegida
-    - endpoints: ["gateway:eth3", "broker:eth1"]
+    # Todos ligados à Vítima (Gateway) na mesma interface lógica/física
+    - endpoints: ["attacker:eth1", "victim:eth1"]
+    - endpoints: ["client:eth1", "victim:eth1"]
