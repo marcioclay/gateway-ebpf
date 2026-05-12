@@ -27,7 +27,6 @@ topology:
       exec:
         - ip addr add 10.0.0.20/24 dev eth1
 
-  links:
-    # Todos ligados à Vítima (Gateway) na mesma interface lógica/física
-    - endpoints: ["attacker:eth1", "victim:eth1"]
-    - endpoints: ["client:eth1", "victim:eth1"]
+ links:
+    # Conexão via Bridge para simular o barramento IoT do artigo
+    - b_endpoints: ["victim:eth1", "attacker:eth1", "client:eth1"]
