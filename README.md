@@ -1,44 +1,59 @@
-# 🐝 Laboratório XDP/eBPF com Containerlab
+# 🐝 Protótipo XDP/eBPF e MQTT com Containerlab
 
-> Laboratório prático de **filtragem de pacotes em velocidade de linha** usando **eBPF/XDP** em um ambiente de rede virtualizado com **Containerlab**.
+> Protótipo de **deteção de pacotes em um Gateway com MQTT** usando **eBPF/XDP** em um ambiente de rede virtualizado com **Containerlab**.
 
 [![Containerlab](https://img.shields.io/badge/Containerlab-v0.50+-blue?logo=linux)](https://containerlab.dev)
 [![Docker](https://img.shields.io/badge/Docker-required-blue?logo=docker)](https://www.docker.com)
 [![eBPF](https://img.shields.io/badge/eBPF-XDP-orange)](https://ebpf.io)
 [![Licença](https://img.shields.io/badge/licença-GPL--2.0-green)](LICENSE)
+![MQTT](https://img.shields.io/badge/Protocol-MQTT-blue)
+[![Linguagem](https://img.shields.io/badge/linguagem-C-blue)](https://en.wikipedia.org/wiki/C_(programming_language))
+[![OS](https://img.shields.io/badge/OS-Ubuntu-orange)](https://ubuntu.com/)
 
 ---
-
 ## 📖 Visão Geral
 
-Este laboratório demonstra um recurso muito poderoso do kernel Linux: o **XDP (eXpress Data Path)**. Aqui é anexado um pequeno programa eBPF na interface de rede, que descarta pacotes **antes mesmo que eles cheguem à pilha de rede**, tornando a filtragem praticamente "gratuita" em termos de CPU.
+Este protótipo apresenta o desenvolvimento de uma Sonda de Monitoramento de Segurança para redes IoT, desenvolvida para a disciplina de Redes Programáveis do Mestrado em Computação Aplicada. O objetivo central é a detecção e análise de tráfego anômalo (DDoS e Slow DoS) em tempo real, utilizando as tecnologias eBPF (extended Berkeley Packet Filter) e XDP (eXpress Data Path).
 
-**O que este laboratório demonstra:**
-- Compilação de um programa eBPF em C para bytecode BPF usando Docker como ambiente de build.
-- Deploy de uma rede virtual com 2 nós usando Containerlab.
-- Carregamento de um programa XDP em uma interface de rede com `bpftool`.
-- Bloqueio de tráfego ICMP (ping) em velocidade de linha.
-- Leitura de contadores de pacotes descartados a partir de um **BPF Map** em tempo real.
-- O laboratório disponibiliza um script (ativation-test.md) para testar o deploy e comparar o desempenho do XDP com o iptables.
+Diferente das abordagens tradicionais baseadas em instâncias de usuário ou logs de aplicação, este protótipo utiliza o eBPF para inspecionar pacotes diretamente no nível mais baixo do kernel Linux. Isso permite uma visibilidade profunda e de altíssima performance sobre o tráfego que chega ao Broker MQTT (Mosquitto), permitindo identificar padrões de ataque antes mesmo que o sistema operacional processe os dados, garantindo telemetria de precisão com custo computacional mínimo.
+
+## 🚀 O que este protótipo demonstra:
+
+- Observabilidade em Nível de Kernel: Implementação de um programa eBPF em C para inspeção de cabeçalhos e extração de metadados de tráfego em tempo real.
+
+- Análise de Fluxo na Borda: Uso do XDP como uma sonda de entrada para capturar estatísticas de rede antes da alocação de buffers de socket (sk_buff), permitindo uma medição fiel da carga de ataque.
+
+- Orquestração de Cenário de Teste: Deploy de uma infraestrutura virtualizada com Containerlab, simulando um ambiente IoT onde um Gateway (Vítima) monitora o tráfego vindo de sensores legítimos e dispositivos comprometidos.
+- Identificação de Vetores de Ataque:
+  - Monitoramento Volumétrico (DDoS): Detecção de inundações UDP/TCP através de contadores de taxa de pacotes por IP.
+  - Análise de Comportamento (Slow DoS): Rastreamento de estados de conexões MQTT para identificar tentativas de exaustão de recursos por     conexões persistentes e lentas.
+- Extração de Métricas via BPF Maps: Uso de mapas do tipo HASH e ARRAY para comunicar as estatísticas detectadas no kernel com o espaço de usuário, permitindo visualização e alertas.
+
+  Ajustes Técnicos no Protótipo:
+requisito "detecção", o fluxo de trabalho do laboratório será focado em:
+
+1. Ação XDP: O programa eBPF utilizará exclusivamente o retorno XDP_PASS. Isso garante que todos os pacotes (benignos ou maliciosos) continuem sua jornada para o Broker, mas não antes de serem contabilizados e analisados pela lógica de detecção.
+2. Métricas de Desempenho: o foco será o Overhead de Observabilidade. Monitorar 100% do tráfego sob ataque pesado sem degradar a CPU do Gateway. 
+
 ---
 
 ## Topologia
 
 
-<img width="500" height="368" alt="imagem_prototipov1" src="https://github.com/user-attachments/assets/00001872-88b9-4381-ace7-a9d5a197329e" />
+INSERIR IMAGEM
 
 
 
 - node-a: Máquina Linux usando a imagem nicolaka/netshoot (distro focada em ferramentas de rede).
 - node-b: Máquina Linux nicolaka/netshoot com um bind, montando o arquivo xdp_drop.o do host diretamente para a raiz do container (/xdp_drop.o).
-
+- node-a: Máquina Linux usando a imagem nicolaka/netshoot (distro focada em ferramentas de rede).
 
 | Nó     | Endereço IP  | Função                                      |
 |--------|-------------|---------------------------------------------|
-| node-a | `10.0.0.1`  | Emissor de pacotes (origem do ping)         |
-| node-b | `10.0.0.2`  | Filtro XDP — descarta pacotes ICMP          |
-| node-c | `10.0.0.2`  | Filtro XDP — descarta pacotes ICMP          |
-| node-d | `10.0.0.2`  | Filtro XDP — descarta pacotes ICMP          |
+| node-a | `10.0.0.10`  | Emissor de pacotes - ilegítimo        |
+| node-b | `10.0.0.20`  | Sensor — emissor pacotes ICMP legítimo      |
+| node-c | `10.0.0.1`  | Filtro XDP — MQTT - GATEWAY          |
+
 
 ---
 
