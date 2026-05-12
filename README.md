@@ -101,8 +101,8 @@ cd ebpf-mqtt
 ```
 
 > 📁 Arquivos principais:
-> - `lab-ebpf.clab.yml` — Definição da topologia Containerlab
-> - `xdp_drop.c` — Código-fonte eBPF/XDP
+> - `topologia.yml` — Definição da topologia Containerlab
+> - `xdp.c` — Código-fonte eBPF/XDP
 > - `compile.sh` — Script de compilação via Docker
 
 ---
