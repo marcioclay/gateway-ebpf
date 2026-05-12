@@ -96,8 +96,8 @@ containerlab version
 Clone o repositório e acesse o diretório do laboratório:
 
 ```bash
-git clone https://github.com/DANIELVENTORIM/ebpf-lab.git
-cd ebpf-lab
+git clone https://github.com/marcioclay/ebpf-mqtt.git
+cd ebpf-mqtt
 ```
 
 > 📁 Arquivos principais:
