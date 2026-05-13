@@ -2,7 +2,7 @@ name: ebpf-mqtt
 
 topology:
   nodes:
-    # VÍTIMA: O Gateway que roda o Mosquitto + eBPF/XDP
+    # VÍTIMA: Gateway IoT (Broker Mosquitto + Sonda eBPF/XDP)
     gateway:
       kind: linux
       image: ubuntu:22.04
@@ -16,20 +16,20 @@ topology:
         - ip addr add 10.0.0.1/24 dev eth1
         - service mosquitto start
 
-    # ATACANTE: Nó comprometido que gera o Flood
-    atacante:
+    # ATACANTE: Dispositivo comprometido (Gera tráfego malicioso)
+    attacker:
       kind: linux
       image: nicolaka/netshoot
       exec:
         - ip addr add 10.0.0.10/24 dev eth1
 
-    # CLIENTE BENIGNO: Sensor legítimo para medir latência/disponibilidade
+    # CLIENTE BENIGNO: Sensor legítimo (Validação de disponibilidade)
     sensor:
       kind: linux
       image: nicolaka/netshoot
       exec:
         - ip addr add 10.0.0.20/24 dev eth1
 
- links:
-    # Conexão via Bridge para simular o barramento IoT do artigo
-    - b_endpoints: ["gateway:eth1", "atacante:eth1", "sensor:eth1"]
+  links:
+    # Conexão via Bridge para simular o barramento único (LAN IoT)
+    - b_endpoints: ["gateway:eth1", "attacker:eth1", "sensor:eth1"]
