@@ -12,7 +12,7 @@ sudo docker run --rm -v $(pwd):/code -w /code ubuntu:22.04 /bin/bash -c "
 "
 
 if [ -f xdp_drop.o ]; then
-    echo "Success! xdp_monitor.o created.🍻🍻🍻"
+    echo "Success! xdp_monitor.o created.😱😱😱"
 else
     echo "Compilation failed.❌"
     exit 1
