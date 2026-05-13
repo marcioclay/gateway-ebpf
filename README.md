@@ -253,7 +253,7 @@ sudo containerlab destroy -t topologia.yml
 
 ---
 
-## 📂 Estrutura do Projeto
+## 📂 Estrutura do Projeto - ALTERAR
 
 ```
 ebpf-mqtt/
@@ -271,7 +271,7 @@ ebpf-mqtt/
 
 ---
 
-## 📚 Referências
+## 📚 Referências - INSERIR
 
 - [Documentação Oficial do eBPF](https://ebpf.io/what-is-ebpf/)
 - [Documentação do Containerlab](https://containerlab.dev/quickstart/)
