@@ -131,7 +131,7 @@ Ele sobe um container Docker temporário que:
 
 **Saída esperada:**
 ```
-Success! xdp_monitor.o created. 🏋🏽‍♂️🏋🏽‍♂️🏋🏽‍♂️
+Success! xdp_monitor.o created. 😱😱😱
 ```
 
 ---
