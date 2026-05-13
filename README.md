@@ -102,7 +102,7 @@ cd ebpf-mqtt
 
 > 📁 Arquivos principais:
 > - `topologia.yml` — Definição da topologia Containerlab
-> - `xdp.c` — Código-fonte eBPF/XDP
+> - `xdp_monitor.c` — Código-fonte eBPF/XDP
 > - `compile.sh` — Script de compilação via Docker
 
 ---
@@ -122,15 +122,15 @@ O script `compile.sh` usa um **container Ubuntu 22.04 como ambiente de build**, 
 
 Ele sobe um container Docker temporário que:
 1. Instala `clang`, `llvm`, `libbpf-dev` e `gcc-multilib`.
-2. Compila `xdp_drop.c` gerando bytecode para a **máquina virtual BPF** (`-target bpf`).
-3. Gera o arquivo objeto `xdp_drop.o` no diretório atual.
+2. Compila `xdp_monitor.c` gerando bytecode para a **máquina virtual BPF** (`-target bpf`).
+3. Gera o arquivo objeto `xdp_monitor.o` no diretório atual.
 4. Remove o container de build automaticamente (`--rm`).
 
 </details>
 
 **Saída esperada:**
 ```
-Success! xdp_drop.o created.🍻🍻🍻
+Success! xdp_monitor.o created.🍻🍻🍻
 ```
 
 ---
