@@ -1,9 +1,9 @@
-name: ebpf-mqtt-lab
+name: ebpf-mqtt
 
 topology:
   nodes:
     # VÍTIMA: O Gateway que roda o Mosquitto + eBPF/XDP
-    victim:
+    gateway:
       kind: linux
       image: ubuntu:22.04
       binds:
@@ -14,14 +14,14 @@ topology:
         - service mosquitto start
 
     # ATACANTE: Nó comprometido que gera o Flood
-    attacker:
+    atacante:
       kind: linux
       image: nicolaka/netshoot
       exec:
         - ip addr add 10.0.0.10/24 dev eth1
 
     # CLIENTE BENIGNO: Sensor legítimo para medir latência/disponibilidade
-    client:
+    sensor:
       kind: linux
       image: nicolaka/netshoot
       exec:
@@ -29,4 +29,4 @@ topology:
 
  links:
     # Conexão via Bridge para simular o barramento IoT do artigo
-    - b_endpoints: ["victim:eth1", "attacker:eth1", "client:eth1"]
+    - b_endpoints: ["gateway:eth1", "atacante:eth1", "sensor:eth1"]
