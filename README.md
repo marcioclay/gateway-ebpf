@@ -44,15 +44,16 @@ INSERIR IMAGEM
 
 
 
-- node-a: Máquina Linux usando a imagem nicolaka/netshoot (distro focada em ferramentas de rede).
-- node-b: Máquina Linux nicolaka/netshoot com um bind, montando o arquivo xdp_drop.o do host diretamente para a raiz do container (/xdp_drop.o).
-- node-a: Máquina Linux usando a imagem nicolaka/netshoot (distro focada em ferramentas de rede).
+- atacante: Máquina Linux usando a imagem nicolaka/netshoot (distro focada em ferramentas de rede).
+- sensor: Máquina Linux usando a imagem nicolaka/netshoot (distro focada em ferramentas de rede).
+- gateway: Máquina Linux nicolaka/netshoot com um bind, montando o arquivo xdp_drop.o do host diretamente para a raiz do container (/xdp_drop.o).
+
 
 | Nó     | Endereço IP  | Função                                      |
 |--------|-------------|---------------------------------------------|
-| node-a | `10.0.0.10`  | Emissor de pacotes - ilegítimo        |
-| node-b | `10.0.0.20`  | Sensor — emissor pacotes ICMP legítimo      |
-| node-c | `10.0.0.1`  | Filtro XDP — MQTT - GATEWAY          |
+| atacante | `10.0.0.10`  | Emissor de pacotes - ilegítimo        |
+| sensor | `10.0.0.20`  | Sensor — emissor pacotes ICMP legítimo      |
+| gateway | `10.0.0.1`  | Filtro XDP — MQTT - GATEWAY          |
 
 
 ---
@@ -130,7 +131,7 @@ Ele sobe um container Docker temporário que:
 
 **Saída esperada:**
 ```
-Success! xdp_monitor.o created.🍻🍻🍻
+Success! xdp_monitor.o created. 🏋🏽‍♂️🏋🏽‍♂️🏋🏽‍♂️
 ```
 
 ---
@@ -138,13 +139,13 @@ Success! xdp_monitor.o created.🍻🍻🍻
 ## 🐝 Passo 2 — Deploy da Topologia
 
 ```bash
-sudo containerlab deploy -t lab-ebpf.clab.yml --reconfigure
+sudo containerlab deploy -t topologia.yml --reconfigure
 ```
 
 Isso irá:
-- Criar dois containers Linux (`node-a` e `node-b`) com a imagem `nicolaka/netshoot`.
+- Criar três containers Linux (`node-a` , `node-b` e `node-c`) com a imagem `nicolaka/netshoot`.
 - Configurar os IPs nas interfaces `eth1` de cada nó.
-- Montar o `xdp_drop.o` dentro do `node-b` em `/xdp_drop.o`.
+- Montar o `xdp_monitor.o` dentro do `node-b` em `/xdp_monitor.o`.
 - Criar um link virtual direto entre as interfaces `eth1` dos dois nós.
 
 Verifique se o lab está rodando:
