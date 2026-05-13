@@ -143,15 +143,15 @@ sudo containerlab deploy -t topologia.yml --reconfigure
 ```
 
 Isso irá:
-- Criar três containers Linux (`node-a` , `node-b` e `node-c`) com a imagem `nicolaka/netshoot`.
+- Criar três containers Linux (`gateway` , `atacante` e `sensor`).
 - Configurar os IPs nas interfaces `eth1` de cada nó.
-- Montar o `xdp_monitor.o` dentro do `node-b` em `/xdp_monitor.o`.
-- Criar um link virtual direto entre as interfaces `eth1` dos dois nós.
+- Montar o `xdp_monitor.o` dentro do `gateway` em `/xdp_monitor.o`.
+- Criar um barramento virtual através de uma bridge conectando as interfaces eth1 dos nós atacante, sensor e gateway.
 
 Verifique se o lab está rodando:
 
 ```bash
-docker ps --filter "label=containerlab=ebpf-lab"
+docker ps --filter "label=containerlab=ebpf-mqtt"
 ```
 
 ---
@@ -161,7 +161,7 @@ docker ps --filter "label=containerlab=ebpf-lab"
 Antes de ativar o filtro XDP, confirme que os nós se comunicam normalmente:
 
 ```bash
-docker exec clab-ebpf-lab-node-a ping -c 3 10.0.0.2
+docker exec clab-ebpf-mqtt-sensor ping -c 3 10.0.0.20
 ```
 
 **Resultado esperado:** `0% packet loss`  
@@ -170,24 +170,24 @@ docker exec clab-ebpf-lab-node-a ping -c 3 10.0.0.2
 
 ## 🐝 Passo 4 — Ativar o Filtro XDP
 
-### 4.1 Instalar o bpftool no node-b
+### 4.1 Instalar o bpftool no gateway
 
 ```bash
-sudo docker exec clab-ebpf-lab-node-b apk add bpftool
+sudo docker exec clab-ebpf-mqtt-gateway apk add bpftool
 ```
 
 ### 4.2 Carregar e pinar o programa XDP
 
 ```bash
 # Remover pin anterior (se existir) para evitar erros
-sudo docker exec clab-ebpf-lab-node-b rm -f /sys/fs/bpf/xdp_test
+sudo docker exec clab-ebpf-mqtt-gateway rm -f /sys/fs/bpf/xdp_test
 
 # Carregar e pinar o programa no filesystem BPF
-sudo docker exec clab-ebpf-lab-node-b \
-  bpftool prog load /xdp_drop.o /sys/fs/bpf/xdp_test type xdp
+sudo docker exec clab-ebpf-mqtt-gateway \
+  bpftool prog load /xdp_monitor.o /sys/fs/bpf/xdp_test type xdp
 
 # Anexar à interface eth1
-sudo docker exec clab-ebpf-lab-node-b \
+sudo docker exec clab-ebpf-mqtt-gateway \
   ip link set dev eth1 xdpgeneric pinned /sys/fs/bpf/xdp_test
 ```
 
@@ -200,7 +200,7 @@ sudo docker exec clab-ebpf-lab-node-b \
 ### 5.1 Confirmar que o ICMP está bloqueado
 
 ```bash
-sudo docker exec clab-ebpf-lab-node-a ping -c 5 10.0.0.2
+sudo docker exec clab-ebpf-mqtt-gateway ping -c 5 10.0.0.1
 ```
 
 **Resultado esperado:** `100% packet loss` 🚫
@@ -208,7 +208,7 @@ sudo docker exec clab-ebpf-lab-node-a ping -c 5 10.0.0.2
 ### 5.2 Ler o contador de drops do BPF Map
 
 ```bash
-sudo docker exec clab-ebpf-lab-node-b bpftool map dump name packet_count_ma
+sudo docker exec clab-ebpf-mqtt-gateway bpftool map dump name packet_count_ma
 ```
 
 > *(O nome do mapa pode aparecer truncado como `packet_count_ma`; você pode usar `bpftool map show` para ver o ID.)*
@@ -230,13 +230,13 @@ sudo docker exec clab-ebpf-lab-node-b bpftool map dump name packet_count_ma
 Para restaurar o tráfego ICMP normal:
 
 ```bash
-sudo docker exec clab-ebpf-lab-node-b ip link set dev eth1 xdpgeneric off
+sudo docker exec clab-ebpf-mqtt-gateway ip link set dev eth1 xdpgeneric off
 ```
 
 Verifique que a conectividade foi restaurada:
 
 ```bash
-sudo docker exec clab-ebpf-lab-node-a ping -c 3 10.0.0.2
+sudo docker exec clab-ebpf-mqtt-gateway ping -c 3 10.0.0.1
 ```
 
 **Resultado esperado:** `0% packet loss` 
@@ -248,7 +248,7 @@ sudo docker exec clab-ebpf-lab-node-a ping -c 3 10.0.0.2
 Para destruir o laboratório e remover todos os containers:
 
 ```bash
-sudo containerlab destroy -t lab-ebpf.clab.yml
+sudo containerlab destroy -t topologia.yml
 ```
 
 ---
@@ -256,7 +256,7 @@ sudo containerlab destroy -t lab-ebpf.clab.yml
 ## 📂 Estrutura do Projeto
 
 ```
-ebpf-lab/
+ebpf-mqtt/
 ├── lab-ebpf.clab.yml        # Definição da topologia Containerlab
 ├── xdp_drop.c               # Código-fonte eBPF/XDP (drop ICMP + contador)
 ├── xdp_drop.o               # Bytecode BPF compilado (gerado pelo compile.sh)
