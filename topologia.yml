@@ -7,23 +7,20 @@ topology:
       kind: linux
       image: ubuntu:22.04
       binds:
-        - ./ebpf-code:/src
-      resources:
-        cpu: 1
-        memory: 1G  
+        - ./:/src
       exec:
         - apt-get update && apt-get install -y mosquitto
         - ip addr add 10.0.0.1/24 dev eth1
         - service mosquitto start
 
-    # ATACANTE: Dispositivo comprometido (Gera tráfego malicioso)
+    # ATACANTE: Dispositivo comprometido
     attacker:
       kind: linux
       image: nicolaka/netshoot
       exec:
         - ip addr add 10.0.0.10/24 dev eth1
 
-    # CLIENTE BENIGNO: Sensor legítimo (Validação de disponibilidade)
+    # CLIENTE BENIGNO: Sensor legítimo
     sensor:
       kind: linux
       image: nicolaka/netshoot
@@ -31,5 +28,5 @@ topology:
         - ip addr add 10.0.0.20/24 dev eth1
 
   links:
-    # Conexão via Bridge para simular o barramento único (LAN IoT)
-    - b_endpoints: ["gateway:eth1", "attacker:eth1", "sensor:eth1"]
+    # Criando o barramento (bridge) conectando todos os eth1
+    - endpoints: ["gateway:eth1", "attacker:eth1", "sensor:eth1"]
