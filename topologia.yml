@@ -2,7 +2,6 @@ name: ebpf-mqtt
 
 topology:
   nodes:
-    # O barramento virtual (Bridge)
     br-iot:
       kind: bridge
 
@@ -13,9 +12,10 @@ topology:
       binds:
         - ./:/src
       exec:
-        - apt-get update && apt-get install -y mosquitto
+        - apt-get update
+        - apt-get install -y mosquitto iproute2
         - ip addr add 10.0.0.1/24 dev eth1
-        - service mosquitto start
+        - mosquitto -d
 
     # ATACANTE
     attacker:
@@ -32,7 +32,6 @@ topology:
         - ip addr add 10.0.0.20/24 dev eth1
 
   links:
-    # Conectando cada nó individualmente à Bridge (Barramento)
     - endpoints: ["gateway:eth1", "br-iot:eth1"]
     - endpoints: ["attacker:eth1", "br-iot:eth2"]
     - endpoints: ["sensor:eth1", "br-iot:eth3"]
