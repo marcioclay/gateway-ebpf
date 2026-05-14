@@ -2,6 +2,7 @@ name: ebpf-mqtt
 
 topology:
   nodes:
+    # 🔀 Switch (Bridge)
     br-iot:
       kind: bridge
 
@@ -10,16 +11,19 @@ topology:
       kind: linux
       image: ubuntu:22.04
       binds:
-        - ./:/src
+        - xdp_monitor.o:/xdp_monitor.o
+        #- ./:/src
       exec:
         - apt-get update
-        # Adicionado iputils-ping (para testes) e tcpdump (para auditoria)
         - apt-get install -y mosquitto iproute2 iputils-ping tcpdump
         - ip addr add 10.0.0.1/24 dev eth1
-        - mosquitto -d
+        # Libera o Mosquitto para aceitar conexões da rede externa e anônimas
+        - sh -c "echo 'listener 1883' >> /etc/mosquitto/mosquitto.conf"
+        - sh -c "echo 'allow_anonymous true' >> /etc/mosquitto/mosquitto.conf"
+        - service mosquitto restart
 
     # ATACANTE
-    attacker:
+    atacante:
       kind: linux
       image: nicolaka/netshoot
       exec:
@@ -34,5 +38,5 @@ topology:
 
   links:
     - endpoints: ["gateway:eth1", "br-iot:eth1"]
-    - endpoints: ["attacker:eth1", "br-iot:eth2"]
+    - endpoints: ["atacante:eth1", "br-iot:eth2"]
     - endpoints: ["sensor:eth1", "br-iot:eth3"]
