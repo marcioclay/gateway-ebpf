@@ -173,7 +173,8 @@ docker exec clab-ebpf-mqtt-sensor ping -c 3 10.0.0.20
 ### 4.1 Instalar o bpftool no gateway
 
 ```bash
-sudo docker exec clab-ebpf-mqtt-gateway apk add bpftool
+docker exec -it clab-ebpf-mqtt-gateway apt-get update
+docker exec -it clab-ebpf-mqtt-gateway apt-get install -y linux-tools-common linux-tools-generic bpfcc-tools
 ```
 
 ### 4.2 Carregar e pinar o programa XDP
