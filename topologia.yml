@@ -13,7 +13,8 @@ topology:
         - ./:/src
       exec:
         - apt-get update
-        - apt-get install -y mosquitto iproute2
+        # Adicionado iputils-ping (para testes) e tcpdump (para auditoria)
+        - apt-get install -y mosquitto iproute2 iputils-ping tcpdump
         - ip addr add 10.0.0.1/24 dev eth1
         - mosquitto -d
 
