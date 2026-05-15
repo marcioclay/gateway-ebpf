@@ -170,7 +170,7 @@ docker ps --filter "label=containerlab=ebpf-mqtt"
 Antes de ativar o filtro XDP, confirme que os nós se comunicam normalmente:
 
 ```bash
-docker exec clab-ebpf-mqtt-sensor ping -c 3 10.0.0.20
+docker exec clab-ebpf-mqtt-sensor ping -c 3 10.0.0.1
 ```
 
 **Resultado esperado:** `0% packet loss`  
@@ -223,63 +223,17 @@ Sobe a topologia
 sudo clab deploy -t topologia.yml --reconfigure
 ```
 
-## 🐝 Passo 5 — Teste e Verificação
-
-### 5.1 Confirmar que o ICMP está bloqueado
-
-```
-sudo docker exec clab-ebpf-mqtt-gateway ping -c 5 10.0.0.1
-```
-
-**Resultado esperado:** `100% packet loss` 🚫
-
-### 5.2 Ler o contador de drops do BPF Map
-
-```bash
-sudo docker exec clab-ebpf-mqtt-gateway bpftool map dump name packet_count_ma
-```
-
-> *(O nome do mapa pode aparecer truncado como `packet_count_ma`; você pode usar `bpftool map show` para ver o ID.)*
-
-**Resultado esperado:**
-```json
-[{
-    "key": 0,
-    "value": 5
-}]
-```
-
-> O contador incrementa atomicamente a cada pacote ICMP descartado — seguro até em múltiplos núcleos de CPU.
-
----
-
-## 🔓 Passo 6 — Desativar o Filtro
-
-Para restaurar o tráfego ICMP normal:
-
-```bash
-sudo docker exec clab-ebpf-mqtt-gateway ip link set dev eth1 xdpgeneric off
-```
-
-Verifique que a conectividade foi restaurada:
-
-```bash
-sudo docker exec clab-ebpf-mqtt-gateway ping -c 3 10.0.0.1
-```
-
-**Resultado esperado:** `0% packet loss` 
-
 ---
 
 ## 🧹 Limpeza
 
 Para destruir o laboratório e remover todos os containers:
 
-```bash
+```
 sudo containerlab destroy -t topologia.yml
 ```
 
----
+
 
 ## 📂 Estrutura do Projeto - ALTERAR
 
@@ -299,7 +253,7 @@ ebpf-mqtt/
 
 ---
 
-## 📚 Referências - INSERIR
+## 📚 Referências - INSERIR artigos e github de terceiro
 
 - [Documentação Oficial do eBPF](https://ebpf.io/what-is-ebpf/)
 - [Documentação do Containerlab](https://containerlab.dev/quickstart/)
