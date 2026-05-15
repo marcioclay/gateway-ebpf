@@ -139,6 +139,14 @@ Success! xdp_monitor.o created. 😱😱😱
 
 ## 🐝 Passo 2 — Deploy da Topologia
 
+```
+# 1. Cria a bridge definida no YAML
+sudo ip link add name switch type bridge
+
+# 2. Ativa a interface
+sudo ip link set dev switch up
+```
+
 ```bash
 sudo containerlab deploy -t topologia.yml --reconfigure
 ```
