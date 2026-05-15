@@ -115,6 +115,7 @@ O script `compile.sh` usa um **container Ubuntu 22.04 como ambiente de build**, 
 ```bash
 # Se não estiver no diretório do lab:
 # cd ~/redes/ebpf-lab
+chmod +x compile.sh
 ./compile.sh
 ```
 
