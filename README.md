@@ -205,7 +205,7 @@ docker exec -it clab-ebpf-mqtt-gateway ip link set dev eth1 xdpgeneric obj /xdp_
 docker exec -it clab-ebpf-mqtt-gateway ip link show eth1
 ```
 
-4.4 Possivéis problemas no virtual box
+4.4 Possíveis problemas no virtual box
 
 Nó switch apaga ao reiniciar amaquina virtual
 ```
