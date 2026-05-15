@@ -205,11 +205,29 @@ docker exec -it clab-ebpf-mqtt-gateway ip link set dev eth1 xdpgeneric obj /xdp_
 docker exec -it clab-ebpf-mqtt-gateway ip link show eth1
 ```
 
+4.4 Possivéis problemas no virtual box
+
+Nó switch apaga ao reiniciar amaquina virtual
+```
+# Verifica se a bridge 'switch' aparece na lista
+ip link show switch
+
+```
+Cria o switch
+```
+sudo ip link add name switch type bridge
+sudo ip link set dev switch up
+```
+Sobe a topologia
+```
+sudo clab deploy -t topologia.yml --reconfigure
+```
+
 ## 🐝 Passo 5 — Teste e Verificação
 
 ### 5.1 Confirmar que o ICMP está bloqueado
 
-```bash
+```
 sudo docker exec clab-ebpf-mqtt-gateway ping -c 5 10.0.0.1
 ```
 
