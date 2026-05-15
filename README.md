@@ -181,29 +181,29 @@ docker exec clab-ebpf-mqtt-sensor ping -c 3 10.0.0.20
 
 ### 4.1 Instalar o bpftool no gateway
 
-```bash
+```
+# Atualiza os repositórios e instala ferramentas de rede e suporte a BPF
 docker exec -it clab-ebpf-mqtt-gateway apt-get update
-docker exec -it clab-ebpf-mqtt-gateway apt-get install -y linux-tools-common linux-tools-generic bpfcc-tools
+docker exec -it clab-ebpf-mqtt-gateway apt-get install -y iproute2 iputils-ping bpfcc-tools tcpdump
 ```
 
 ### 4.2 Carregar e pinar o programa XDP
 
-```bash
-# Remover pin anterior (se existir) para evitar erros
-sudo docker exec clab-ebpf-mqtt-gateway rm -f /sys/fs/bpf/xdp_test
-
-# Carregar e pinar o programa no filesystem BPF
-sudo docker exec clab-ebpf-mqtt-gateway \
-  bpftool prog load /xdp_monitor.o /sys/fs/bpf/xdp_test type xdp
-
-# Anexar à interface eth1
-sudo docker exec clab-ebpf-mqtt-gateway \
-  ip link set dev eth1 xdpgeneric pinned /sys/fs/bpf/xdp_test
 ```
+# 1. Ajustar o MTU (erro 'Peer MTU is too large')
+docker exec -it clab-ebpf-mqtt-gateway ip link set dev eth1 mtu 1400
+sudo ip link set dev switch mtu 1400
 
-> **Por que pinar?** Pinar o programa em `/sys/fs/bpf/` mantém o BPF Map ativo na memória, permitindo ler o contador de drops mesmo após o comando de carregamento encerrar.
+# 2. Carregar o programa eBPF diretamente na interface eth1
+# Usamos 'xdpgeneric' para máxima compatibilidade com drivers virtuais (veth)
+docker exec -it clab-ebpf-mqtt-gateway ip link set dev eth1 xdpgeneric obj /xdp_monitor.o sec xdp
 
----
+```
+4.3 Verificar se o programa está ativo
+
+```
+docker exec -it clab-ebpf-mqtt-gateway ip link show eth1
+```
 
 ## 🐝 Passo 5 — Teste e Verificação
 
