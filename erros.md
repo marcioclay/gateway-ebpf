@@ -1,3 +1,10 @@
+
+## Verificar interface
+docker exec -it clab-ebpf-mqtt-gateway ip addr show eth1
+
+
+
+_________________________________________________________
 ## ERRO MTU XDP
 Esse erro é um clássico ao trabalhar com eBPF em ambientes de rede virtual (veth), como o Containerlab. O XDP precisa de um espaço extra no cabeçalho do pacote para processamento, e se o MTU (Maximum Transmission Unit) estiver no padrão de 1500, não sobra espaço para os metadados do XDP.
 
