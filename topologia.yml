@@ -2,8 +2,7 @@ name: ebpf-mqtt
 
 topology:
   nodes:
-    # 🔀 Switch (Bridge)
-    br-iot:
+    switch:
       kind: bridge
 
     # VÍTIMA: Gateway IoT
@@ -37,6 +36,6 @@ topology:
         - ip addr add 10.0.0.20/24 dev eth1
 
   links:
-    - endpoints: ["gateway:eth1", "br-iot:eth1"]
-    - endpoints: ["atacante:eth1", "br-iot:eth2"]
-    - endpoints: ["sensor:eth1", "br-iot:eth3"]
+    - endpoints: ["gateway:eth1", "switch:eth1"]
+    - endpoints: ["atacante:eth1", "switch:eth2"]
+    - endpoints: ["sensor:eth1", "switch:eth3"]
