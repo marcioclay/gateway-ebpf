@@ -179,33 +179,20 @@ docker exec clab-ebpf-mqtt-sensor ping -c 3 10.0.0.1
 
 ## 🐝 Passo 4 — Ativar o Filtro XDP
 
-### 4.1 Instalar o bpftool no gateway
+### 4.1 Ativar a Sonda eBPF/XDP
 
 ```
-# Atualiza os repositórios e instala ferramentas de rede e suporte a BPF
-docker exec -it clab-ebpf-mqtt-gateway apt-get update
-docker exec -it clab-ebpf-mqtt-gateway apt-get install -y iproute2 iputils-ping bpfcc-tools tcpdump
+# Carrega o programa nativamente no Gateway via iproute2
+docker exec -it clab-ebpf-mqtt-gateway ip link set dev eth1 xdpgeneric obj /src/xdp_monitor.o sec xdp
 ```
 
-### 4.2 Carregar e pinar o programa XDP
-
-```
-# 1. Ajustar o MTU (erro 'Peer MTU is too large')
-docker exec -it clab-ebpf-mqtt-gateway ip link set dev eth1 mtu 1400
-sudo ip link set dev switch mtu 1400
-
-# 2. Carregar o programa eBPF diretamente na interface eth1
-# Usamos 'xdpgeneric' para máxima compatibilidade com drivers virtuais (veth)
-docker exec -it clab-ebpf-mqtt-gateway ip link set dev eth1 xdpgeneric obj /xdp_monitor.o sec xdp
-
-```
-4.3 Verificar se o programa está ativo
+4.2 Verificar se o programa está ativo
 
 ```
 docker exec -it clab-ebpf-mqtt-gateway ip link show eth1
 ```
 
-4.4 Possíveis problemas no virtual box
+4.3 Possíveis problemas no virtual box
 
 Nó switch apaga ao reiniciar amaquina virtual
 ```
