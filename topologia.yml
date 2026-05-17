@@ -2,45 +2,35 @@ name: ebpf-mqtt
 
 topology:
   nodes:
-    # Bridge interna para interconectar os nós de forma isolada
     switch:
       kind: bridge
 
-    # VÍTIMA: Gateway IoT com Broker Mosquitto
+    # VÍTIMA: Gateway IoT
     gateway:
       kind: linux
       image: ubuntu:22.04
       binds:
         - ./:/src
       exec:
-        - apt-get update
-        - apt-get install -y mosquitto iproute2 iputils-ping tcpdump libbpf-dev
         - ip addr add 10.0.0.1/24 dev eth1
         - ip link set dev eth1 mtu 1400
-        # Configuração do Mosquitto para aceitar conexões externas sem autenticação
-        - sh -c "echo 'listener 1883\nallow_anonymous true' > /etc/mosquitto/mosquitto.conf"
-        - service mosquitto restart
 
-    # ATACANTE: Capaz de executar hping3 (DDoS) e Scripts Python (SlowTT)
+    # ATACANTE
     atacante:
       kind: linux
       image: nicolaka/netshoot
       binds:
         - ./src:/src
       exec:
-        - apk update && apk add hping3 python3 py3-pip
-        - pip3 install paho-mqtt
         - ip addr add 10.0.0.10/24 dev eth1
 
-    # CLIENTE BENIGNO: Sensor simulando tráfego legítimo MQTT
+    # CLIENTE BENIGNO: Sensor
     sensor:
       kind: linux
       image: nicolaka/netshoot
       binds:
         - ./src:/src
       exec:
-        - apk update && apk add python3 py3-pip
-        - pip3 install paho-mqtt
         - ip addr add 10.0.0.20/24 dev eth1
 
   links:
