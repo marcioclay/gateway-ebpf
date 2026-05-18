@@ -5,7 +5,7 @@
 #include <bpf/bpf_helpers.h>
 
 #define MQTT_PORT 1883
-
+/* Coleta de dados para DDos(contador volumetrico) e Slow Dos(estado comportamental) */
 /* MAPA 1: Tabela de conexões TCP ativas por IP na porta MQTT (Métrica para Slow DoS) */
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
@@ -14,7 +14,7 @@ struct {
     __type(value, __u64); // Contador de pacotes TCP nesta conexão
 } mqtt_sessions SEC(".maps");
 
-/* MAPA 2: Estatísticas globais do plano de dados (eMetrics do Artigo) 
+/* MAPA 2: Estatísticas globais do plano de dados (metricas do artigo) 
    Key 0: Total pacotes UDP (Foco do DDoS hping3)
    Key 1: Total pacotes TCP MQTT (Foco do Slow DoS)
 */
