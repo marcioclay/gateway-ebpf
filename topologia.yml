@@ -10,17 +10,12 @@ topology:
       kind: linux
       image: ubuntu:22.04
       binds:
-        - ./:/src
+        - ./xdp_monitor.o:/xdp_monitor.o
       exec:
         # 1. Configuração de Rede Básica
         - ip addr add 10.0.0.1/24 dev eth1
         - ip link set dev eth1 mtu 1400
-        # 2. Instalação das ferramentas essenciais do Kernel
-        - apt-get update && apt-get install -y clang llvm libelf-dev libbpf-dev iproute2 iputils-ping tcpdump
-        # 3. Compilação automática do código C puro
-        - clang -O2 -target bpf -c /src/xdp_monitor.c -o /src/xdp_monitor.o
-        # 4. Carga automática da Sonda XDP diretamente na interface eth1
-        - ip link set dev eth1 xdpgeneric obj /src/xdp_monitor.o sec xdp
+        
 
     # ATACANTE
     atacante:
