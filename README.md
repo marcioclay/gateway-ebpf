@@ -126,7 +126,7 @@ cd ebpf-mqtt
 
 ---
 
-### 4. Passo 1 — Compilar o Programa eBPF
+### 4. Compilar o Programa eBPF
 
 O script `compile.sh` usa um **container Ubuntu 22.04 como ambiente de build**, dispensando a instalação de ferramentas de compilação no host.Isso evita que você precise instalar localmente todas as dependências de eBPF (que podem ser pesadas ou conflitar) diretamente no seu sistema host.
 
