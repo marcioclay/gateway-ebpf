@@ -43,14 +43,14 @@ int xdp_monitor_prog(struct xdp_md *ctx) {
     __u32 stat_key;
     __u64 *cnt;
 
-    // Cenário 1: Identificação de DDoS Volumétrico (UDP Flood)
+    // DDoS Volumétrico (UDP Flood)
     if (iph->protocol == 17) { // UDP
         stat_key = 0;
         cnt = bpf_map_lookup_elem(&proto_stats, &stat_key);
         if (cnt) __sync_fetch_and_add(cnt, 1);
         return XDP_PASS;
     }
-
+/*
     // Cenário 2: Identificação de Slow DoS (TCP na porta MQTT)
     if (iph->protocol == 6) { // TCP
         // Calcula o offset do cabeçalho TCP dinamicamente para o verificador
@@ -72,7 +72,7 @@ int xdp_monitor_prog(struct xdp_md *ctx) {
             } else {
                 __u64 init_val = 1;
                 bpf_map_update_elem(&mqtt_sessions, &src_ip, &init_val, BPF_ANY);
-            }
+            } */
         }
     }
 
