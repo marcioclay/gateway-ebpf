@@ -165,7 +165,39 @@ docker ps --filter "label=containerlab=ebpf-mqtt"
 
 ---
 
-## 🐝 Passo 3 — Verificar Conectividade Inicial
+## 🐝 Passo 3 - Configuração e Inicialização do Ambiente
+
+Após clonar o repositório e subir a topologia com `sudo clab deploy -t topology.yml`, execute os comandos abaixo para preparar os ambientes internos de cada container.
+
+### A. Configurar o Gateway (Broker Mosquitto)
+Entre no Gateway, instale as dependências de rede e force a inicialização correta do Broker corrigindo as pastas de permissão do sistema:
+```
+# Instala as ferramentas necessárias
+docker exec -it clab-ebpf-mqtt-gateway apt-get update
+docker exec -it clab-ebpf-mqtt-gateway apt-get install -y mosquitto iproute2 iputils-ping tcpdump libbpf-dev
+
+# Corrige os diretórios do Mosquitto e inicia o serviço
+docker exec -it clab-ebpf-mqtt-gateway sh -c "mkdir -p /run/mosquitto && chown -R mosquitto:mosquitto /run/mosquitto"
+docker exec -it clab-ebpf-mqtt-gateway sh -c "echo 'listener 1883\nallow_anonymous true' > /etc/mosquitto/mosquitto.conf"
+docker exec -it clab-ebpf-mqtt-gateway mosquitto -d -c /etc/mosquitto/mosquitto.conf
+```
+
+B. Configurar o Atacante (Ferramentas de Ataque)
+Instale o hping3 para os testes volumétricos:
+
+```
+docker exec -it clab-ebpf-mqtt-atacante apk add --no-cache hping3
+```
+
+C. Configurar o Sensor Legítimo (Biblioteca MQTT)
+
+Instale o gerenciador Python contornando a restrição de ambiente gerenciado (PEP 668):
+
+```
+docker exec -it clab-ebpf-mqtt-sensor sh -c "apk add --no-cache py3-pip && pip3 in
+```
+
+## 🐝 Passo 4 — Verificar Conectividade Inicial
 
 Antes de ativar o filtro XDP, confirme que os nós se comunicam normalmente:
 
@@ -177,7 +209,7 @@ docker exec clab-ebpf-mqtt-sensor ping -c 3 10.0.0.1
 
 ---
 
-## 🐝 Passo 4 — Ativar o Filtro XDP
+## 🐝 Passo 5 — Ativar o Filtro XDP
 
 ### 4.1 Ativar a Sonda eBPF/XDP
 
