@@ -110,7 +110,7 @@ containerlab version
 
 ---
 
-## ⏬ Obtendo o Laboratório
+### 3. Obtendo o Laboratório
 
 Clone o repositório e acesse o diretório do laboratório:
 
@@ -126,7 +126,7 @@ cd ebpf-mqtt
 
 ---
 
-## ⚙️ Passo 1 — Compilar o Programa eBPF
+### 4. Passo 1 — Compilar o Programa eBPF
 
 O script `compile.sh` usa um **container Ubuntu 22.04 como ambiente de build**, dispensando a instalação de ferramentas de compilação no host.Isso evita que você precise instalar localmente todas as dependências de eBPF (que podem ser pesadas ou conflitar) diretamente no seu sistema host.
 
@@ -155,7 +155,7 @@ Success! xdp_monitor.o created. 😱😱😱
 
 ---
 
-## 🐝 Passo 2 — Deploy da Topologia
+### 5. Deploy da Topologia
 
 ```
 # 1. Cria a bridge definida no YAML
@@ -183,7 +183,7 @@ docker ps --filter "label=containerlab=ebpf-mqtt"
 
 ---
 
-## 🐝 Passo 3 - Configuração e Inicialização do Ambiente
+## 6. Configuração e Inicialização do Ambiente
 
 Após clonar o repositório e subir a topologia com `sudo clab deploy -t topology.yml`, execute os comandos abaixo para preparar os ambientes internos de cada container.
 
@@ -215,7 +215,7 @@ Instale o gerenciador Python contornando a restrição de ambiente gerenciado (P
 docker exec -it clab-ebpf-mqtt-sensor sh -c "apk add --no-cache py3-pip && pip3 in
 ```
 
-## 🐝 Passo 4 — Verificar Conectividade Inicial
+## 7. Verificar Conectividade Inicial
 
 Antes de ativar o filtro XDP, confirme que os nós se comunicam normalmente:
 
@@ -227,7 +227,7 @@ docker exec clab-ebpf-mqtt-sensor ping -c 3 10.0.0.1
 
 ---
 
-## 🐝 Passo 5 — Ativar o Filtro XDP
+## 8. Ativar o Filtro XDP
 
 ### 4.1 Ativar a Sonda eBPF/XDP
 
@@ -272,7 +272,7 @@ sudo containerlab destroy -t topologia.yml
 
 
 
-## 📂 Estrutura do Projeto - ALTERAR
+## 📂 Estrutura do Projeto 
 
 ```
 .
