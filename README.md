@@ -13,17 +13,14 @@
 ---
 ## 📖 Visão Geral
 
-Este protótipo apresenta o desenvolvimento de uma Sonda de Monitoramento de Segurança para redes IoT, desenvolvida para a disciplina de Redes Programáveis do Mestrado em Computação Aplicada. O objetivo central é a detecção e análise de tráfego anômalo (DDoS e Slow DoS) em tempo real, utilizando as tecnologias eBPF (extended Berkeley Packet Filter) e XDP (eXpress Data Path).
+Este protótipo apresenta o desenvolvimento de uma Sonda de Monitoramento de Segurança para redes IoT, desenvolvida para a disciplina de Redes Programáveis do Mestrado em Computação Aplicada. O objetivo é a detecção e análise de tráfego anômalo (DDoS e Slow DoS) em tempo real, utilizando as tecnologias eBPF (extended Berkeley Packet Filter) e XDP (eXpress Data Path).
 
-Diferente das abordagens tradicionais baseadas em instâncias de usuário ou logs de aplicação, este protótipo utiliza o eBPF para inspecionar pacotes diretamente no nível mais baixo do kernel Linux. Isso permite uma visibilidade profunda e de altíssima performance sobre o tráfego que chega ao Broker MQTT (Mosquitto), permitindo identificar padrões de ataque antes mesmo que o sistema operacional processe os dados, garantindo telemetria de precisão com custo computacional mínimo.
-
-## 🚀 O que este protótipo demonstra:
+## O que este protótipo demonstra:
 
 - Observabilidade em Nível de Kernel: Implementação de um programa eBPF em C para inspeção de cabeçalhos e extração de metadados de tráfego em tempo real.
 
 - Análise de Fluxo na Borda: Uso do XDP como uma sonda de entrada para capturar estatísticas de rede antes da alocação de buffers de socket (sk_buff), permitindo uma medição fiel da carga de ataque.
-
-- Orquestração de Cenário de Teste: Deploy de uma infraestrutura virtualizada com Containerlab, simulando um ambiente IoT onde um Gateway (Vítima) monitora o tráfego vindo de sensores legítimos e dispositivos comprometidos.
+- Orquestração de Cenário de Teste: 
 - Identificação de Vetores de Ataque:
   - Monitoramento Volumétrico (DDoS): Detecção de inundações UDP/TCP através de contadores de taxa de pacotes por IP.
   - Análise de Comportamento (Slow DoS): Rastreamento de estados de conexões MQTT para identificar tentativas de exaustão de recursos por     conexões persistentes e lentas.
@@ -40,13 +37,34 @@ requisito "detecção", o fluxo de trabalho do laboratório será focado em:
 ## Topologia
 
 
-INSERIR IMAGEM
+## 🌐 Topologia da Rede
 
 
+```
+┌────────────────────────────────────────────────────────┐
+│                      MÁQUINA HOST                      │
+│                                                        │
+│  ┌────────────────────────┐    ┌────────────────────┐  │
+│  │    clab-mqtt-sensor    │    │ clab-mqtt-atacante │  │
+│  │     (10.0.0.20/24)     │    │   (10.0.0.10/24)   │  │
+│  └───────────┬────────────┘    └──────────┬─────────┘  │
+│              │ eth1                       │ eth1       │
+│              └──────────────┬─────────────┘            │
+│                             ▼                          │
+│                  ┌────────────────────┐                │
+│                  │  clab-mqtt-bridge  │                │
+│                  │  (Switch Virtual)  │                │
+│                  └──────────┬─────────┘                │
+│                             │ eth1                     │
+│                             ▼                          │
+│                  ┌────────────────────┐                │
+│                  │ clab-mqtt-gateway  │                │
+│                  │   (10.0.0.1/24)    │                │
+│                  │ [Filtro eBPF/XDP]  │                │
+│                  └────────────────────┘                │
+└────────────────────────────────────────────────────────┘
 
-- atacante: Máquina Linux usando a imagem nicolaka/netshoot (distro focada em ferramentas de rede).
-- sensor: Máquina Linux usando a imagem nicolaka/netshoot (distro focada em ferramentas de rede).
-- gateway: Máquina Linux nicolaka/netshoot com um bind, montando o arquivo xdp_drop.o do host diretamente para a raiz do container (/xdp_drop.o).
+```
 
 
 | Nó     | Endereço IP  | Função                                      |
@@ -257,26 +275,34 @@ sudo containerlab destroy -t topologia.yml
 ## 📂 Estrutura do Projeto - ALTERAR
 
 ```
-ebpf-mqtt/
-├── lab-ebpf.clab.yml        # Definição da topologia Containerlab
-├── xdp_drop.c               # Código-fonte eBPF/XDP (drop ICMP + contador)
-├── xdp_drop.o               # Bytecode BPF compilado (gerado pelo compile.sh)
-├── compile.sh               # Script de compilação eBPF via Docker
-├── ativation-test.md        # Guia de referência rápida
-└── clab-ebpf-lab/           # Arquivos de runtime gerados pelo Containerlab
-    ├── ansible-inventory.yml
-    ├── nornir-simple-inventory.yml
-    ├── authorized_keys
-    └── topology-data.json
+.
+├── clab-ebpf-mqtt
+│   ├── ansible-inventory.yml
+│   ├── authorized_keys
+│   ├── nornir-simple-inventory.yml
+│   └── topology-data.json
+├── compile.sh
+├── README.md
+├── src
+│   ├── sensor.py
+│   └── slow_attack.py
+├── topologia.yml
+├── xdp_monitor.c
+└── xdp_monitor.o
+
 ```
 
 ---
 
-## 📚 Referências - INSERIR artigos e github de terceiro
+## 📚 Referências 
 
 - [Documentação Oficial do eBPF](https://ebpf.io/what-is-ebpf/)
 - [Documentação do Containerlab](https://containerlab.dev/quickstart/)
 - [Tutorial XDP (kernel.org)](https://github.com/xdp-project/xdp-tutorial)
 - [libbpf GitHub](https://github.com/libbpf/libbpf)
 - [nicolaka/netshoot — Container de diagnóstico de rede](https://github.com/nicolaka/netshoot)
+- [Tutorial de artigo ataque slow](https://github.com/gianluca2414/MQTT_SlowITe )
+
+
+
 
