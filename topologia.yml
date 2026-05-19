@@ -2,37 +2,58 @@ name: gateway-ebpf
 
 topology:
   nodes:
-    # 1. O Switch LAN Virtual
+    # --- O SWITCH (Usando Capabilities em vez de Privileged) ---
     switch:
-      kind: bridge
+      kind: linux
+      image: nicolaka/netshoot:latest
+      capabilities:
+        - NET_ADMIN # Permissão para criar a bridge e links
+      exec:
+        - ip link add br0 type bridge
+        - ip link set br0 up
+        - ip link set eth1 master br0
+        - ip link set eth2 master br0
+        - ip link set eth3 master br0
+        - ip link set eth1 up
+        - ip link set eth2 up
+        - ip link set eth3 up
 
-    # 2. Gateway IoT (Vítima)
+    # --- GATEWAY IOT (Onde o eBPF vai rodar) ---
     gateway:
       kind: linux
       image: nicolaka/netshoot:latest
       cpuset: "0"
-      privileged: true       
-      bpf-support: true      
+      capabilities:
+        - NET_ADMIN
+        - SYS_ADMIN
+        - SYS_RESOURCE
       binds:
+        # Monta o sistema de arquivos BPF explicitamente
+        - /sys/fs/bpf:/sys/fs/bpf:shared
+        # Monta os módulos do kernel (ajuda na compilação/execução)
+        - /lib/modules:/lib/modules:ro
+        # O seu programa compilado
         - ./xdp_monitor.o:/xdp_monitor.o
       exec:
         - ip addr add 10.0.0.1/24 dev eth1
 
-    # 3. Máquina Atacante
+    # --- MÁQUINA ATACANTE ---
     atacante:
       kind: linux
       image: nicolaka/netshoot:latest
-      privileged: true
+      capabilities:
+        - NET_ADMIN # Apenas para configurar IP e rotas
       binds:
         - ./src:/src
       exec:
         - ip addr add 10.0.0.10/24 dev eth1
 
-    # 4. Cliente Benigno (Sensor)
+    # --- CLIENTE BENIGNO (SENSOR) ---
     sensor:
       kind: linux
       image: nicolaka/netshoot:latest
-      privileged: true
+      capabilities:
+        - NET_ADMIN
       binds:
         - ./src:/src
       exec:
