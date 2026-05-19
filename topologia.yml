@@ -1,35 +1,38 @@
-name: ebpf-mqtt
+name: ebpf-gateway
 
 topology:
   nodes:
+    # 1. O Switch LAN Virtual
     switch:
       kind: bridge
 
-    # VÍTIMA: Gateway IoT (Compila e ativa o eBPF automaticamente no boot)
+    # 2. Gateway IoT (Vítima)
     gateway:
       kind: linux
-      image: ubuntu:22.04
+      image: nicolaka/netshoot:latest
+      cpuset: "0"
+      privileged: true       
+      bpf-support: true      
       binds:
         - ./xdp_monitor.o:/xdp_monitor.o
       exec:
-        # 1. Configuração de Rede Básica
         - ip addr add 10.0.0.1/24 dev eth1
-        - ip link set dev eth1 mtu 1400
-        
 
-    # ATACANTE
+    # 3. Máquina Atacante
     atacante:
       kind: linux
-      image: nicolaka/netshoot
+      image: nicolaka/netshoot:latest
+      privileged: true
       binds:
         - ./src:/src
       exec:
         - ip addr add 10.0.0.10/24 dev eth1
 
-    # CLIENTE BENIGNO: Sensor
+    # 4. Cliente Benigno (Sensor)
     sensor:
       kind: linux
-      image: nicolaka/netshoot
+      image: nicolaka/netshoot:latest
+      privileged: true
       binds:
         - ./src:/src
       exec:
