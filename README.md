@@ -189,16 +189,12 @@ docker exec clab-gateway-ebpf-sensor ping -c 3 10.0.0.1
 
 ## 7. Ativar o Filtro XDP
 
-### 7.1 Ativar a Sonda eBPF/XDP 
-
 ```
-docker exec -it clab-ebpf-gateway-gateway ip link set dev eth1 xdpgeneric object /xdp_monitor.o section xdp
-```
+# Para ativar o XDP:
+docker exec -it clab-gateway-ebpf-gateway ip link set dev eth1 xdpgeneric object /xdp_monitor.o section xdp
 
-### 7.2 Verificar se o programa foi acoplado ao gateway
-
-```
-docker exec -it clab-ebpf-gateway-gateway ip link show eth1
+# Para verificar a ativação:
+docker exec -it clab-gateway-ebpf-gateway ip link show eth1
 ```
 
 
