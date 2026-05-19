@@ -1,12 +1,11 @@
-# 🐝 Protótipo XDP/eBPF e MQTT com Containerlab
+# 🐝 Protótipo de topologia com XDP/eBPF orquestrado por Containerlab
 
-> Protótipo de **deteção de pacotes em um Gateway com MQTT** usando **eBPF/XDP** em um ambiente de rede virtualizado com **Containerlab**.
+> Protótipo de **deteção de pacotes em um Gateway** usando **eBPF/XDP** em um ambiente de rede virtualizado com **Containerlab**.
 
 [![Containerlab](https://img.shields.io/badge/Containerlab-v0.50+-blue?logo=linux)](https://containerlab.dev)
 [![Docker](https://img.shields.io/badge/Docker-required-blue?logo=docker)](https://www.docker.com)
 [![eBPF](https://img.shields.io/badge/eBPF-XDP-orange)](https://ebpf.io)
 [![Licença](https://img.shields.io/badge/licença-GPL--2.0-green)](LICENSE)
-![MQTT](https://img.shields.io/badge/Protocol-MQTT-blue)
 [![Linguagem](https://img.shields.io/badge/linguagem-C-blue)](https://en.wikipedia.org/wiki/C_(programming_language))
 [![OS](https://img.shields.io/badge/OS-Ubuntu-orange)](https://ubuntu.com/)
 
@@ -45,20 +44,20 @@ requisito "detecção", o fluxo de trabalho do laboratório será focado em:
 │                      MÁQUINA HOST                      │
 │                                                        │
 │  ┌────────────────────────┐    ┌────────────────────┐  │
-│  │    clab-mqtt-sensor    │    │ clab-mqtt-atacante │  │
+│  │    clab-sensor    │    │    │    clab-atacante   │  │
 │  │     (10.0.0.20/24)     │    │   (10.0.0.10/24)   │  │
 │  └───────────┬────────────┘    └──────────┬─────────┘  │
 │              │ eth1                       │ eth1       │
 │              └──────────────┬─────────────┘            │
 │                             ▼                          │
 │                  ┌────────────────────┐                │
-│                  │  clab-mqtt-bridge  │                │
+│                  │  clab-bridge       │                │
 │                  │  (Switch Virtual)  │                │
 │                  └──────────┬─────────┘                │
 │                             │ eth1                     │
 │                             ▼                          │
 │                  ┌────────────────────┐                │
-│                  │ clab-mqtt-gateway  │                │
+│                  │ clab- gateway      │                │
 │                  │   (10.0.0.1/24)    │                │
 │                  │ [Filtro eBPF/XDP]  │                │
 │                  └────────────────────┘                │
@@ -71,7 +70,7 @@ requisito "detecção", o fluxo de trabalho do laboratório será focado em:
 |--------|-------------|---------------------------------------------|
 | atacante | `10.0.0.10`  | Emissor de pacotes - ilegítimo        |
 | sensor | `10.0.0.20`  | Sensor — emissor pacotes ICMP legítimo      |
-| gateway | `10.0.0.1`  | Filtro XDP — MQTT - GATEWAY          |
+| gateway | `10.0.0.1`  | Filtro XDP - GATEWAY          |
 
 
 ---
@@ -115,8 +114,8 @@ containerlab version
 Clone o repositório e acesse o diretório do laboratório:
 
 ```bash
-git clone https://github.com/marcioclay/ebpf-mqtt.git
-cd ebpf-mqtt
+git clone https://github.com/marcioclay/gateway-ebpf.git
+cd gateway-ebpf
 ```
 
 > 📁 Arquivos principais:
@@ -128,11 +127,11 @@ cd ebpf-mqtt
 
 ### 4. Compilar o Programa eBPF
 
-O script `compile.sh` usa um **container Ubuntu 22.04 como ambiente de build**, dispensando a instalação de ferramentas de compilação no host.Isso evita que você precise instalar localmente todas as dependências de eBPF (que podem ser pesadas ou conflitar) diretamente no seu sistema host.
+O script `compile.sh` usa um **container nicolaka/netshoot como ambiente de build**, dispensando a instalação de ferramentas de compilação no host.Isso evita que você precise instalar localmente todas as dependências de eBPF (que podem ser pesadas ou conflitar) diretamente no seu sistema host.
 
 ```bash
 # Se não estiver no diretório do lab:
-# cd ~/redes/ebpf-lab
+# cd ~/redes/gateway-ebpf
 chmod +x compile.sh
 ./compile.sh
 ```
@@ -157,14 +156,6 @@ Success! xdp_monitor.o created. 😱😱😱
 
 ### 5. Deploy da Topologia
 
-```
-# 1. Cria a bridge definida no YAML
-sudo ip link add name switch type bridge
-
-# 2. Ativa a interface
-sudo ip link set dev switch up
-```
-
 ```bash
 sudo containerlab deploy -t topologia.yml --reconfigure
 ```
@@ -178,89 +169,28 @@ Isso irá:
 Verifique se o lab está rodando:
 
 ```bash
-docker ps --filter "label=containerlab=ebpf-mqtt"
+docker ps --filter "label=containerlab=gateway-ebpf"
 ```
 
 ---
 
-## 6. Configuração e Inicialização do Ambiente
 
-Após clonar o repositório e subir a topologia com `sudo clab deploy -t topology.yml`, execute os comandos abaixo para preparar os ambientes internos de cada container.
-
-### A. Configurar o Gateway (Broker Mosquitto)
-Entre no Gateway, instale as dependências de rede e force a inicialização correta do Broker corrigindo as pastas de permissão do sistema:
-```
-# Instala as ferramentas necessárias
-docker exec -it clab-ebpf-mqtt-gateway apt-get update
-docker exec -it clab-ebpf-mqtt-gateway apt-get install -y mosquitto iproute2 iputils-ping tcpdump libbpf-dev
-
-# Corrige os diretórios do Mosquitto e inicia o serviço
-docker exec -it clab-ebpf-mqtt-gateway sh -c "mkdir -p /run/mosquitto && chown -R mosquitto:mosquitto /run/mosquitto"
-docker exec -it clab-ebpf-mqtt-gateway sh -c "echo 'listener 1883\nallow_anonymous true' > /etc/mosquitto/mosquitto.conf"
-docker exec -it clab-ebpf-mqtt-gateway mosquitto -d -c /etc/mosquitto/mosquitto.conf
-```
-
-B. Configurar o Atacante (Ferramentas de Ataque)
-Instale o hping3 para os testes volumétricos:
-
-```
-docker exec -it clab-ebpf-mqtt-atacante apk add --no-cache hping3
-```
-
-C. Configurar o Sensor Legítimo (Biblioteca MQTT)
-
-Instale o gerenciador Python contornando a restrição de ambiente gerenciado (PEP 668):
-
-```
-docker exec -it clab-ebpf-mqtt-sensor sh -c "apk add --no-cache py3-pip && pip3 in
-```
-
-## 7. Verificar Conectividade Inicial
+## 6. Verificar Conectividade Inicial
 
 Antes de ativar o filtro XDP, confirme que os nós se comunicam normalmente:
 
 ```bash
-docker exec clab-ebpf-mqtt-sensor ping -c 3 10.0.0.1
+docker exec clab-gateway-ebpf-sensor ping -c 3 10.0.0.1
 ```
 
 **Resultado esperado:** `0% packet loss`  
 
 ---
 
-## 8. Ativar o Filtro XDP
+## 7. Ativar o Filtro XDP
 
-### 4.1 Ativar a Sonda eBPF/XDP
+### 7.1 Ativar a Sonda eBPF/XDP
 
-```
-# Carrega o programa nativamente no Gateway via iproute2
-docker exec -it clab-ebpf-mqtt-gateway ip link set dev eth1 xdpgeneric obj /src/xdp_monitor.o sec xdp
-```
-
-4.2 Verificar se o programa está ativo
-
-```
-docker exec -it clab-ebpf-mqtt-gateway ip link show eth1
-```
-
-4.3 Possíveis problemas no virtual box
-
-Nó switch apaga ao reiniciar amaquina virtual
-```
-# Verifica se a bridge 'switch' aparece na lista
-ip link show switch
-
-```
-Cria o switch
-```
-sudo ip link add name switch type bridge
-sudo ip link set dev switch up
-```
-Sobe a topologia
-```
-sudo clab deploy -t topologia.yml --reconfigure
-```
-
----
 
 ## 🧹 Limpeza
 
