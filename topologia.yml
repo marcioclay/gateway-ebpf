@@ -20,9 +20,6 @@ topology:
       kind: linux
       image: nicolaka/netshoot:latest
       binds:
-        # Monta os caminhos do Kernel do Host - eBPF
-        - /sys/fs/bpf:/sys/fs/bpf:shared
-        - /lib/modules:/lib/modules:ro
         - ./xdp_monitor.o:/xdp_monitor.o
       exec:
         - ip addr add 10.0.0.1/24 dev eth1
