@@ -66,7 +66,7 @@ sudo docker exec -it clab-gateway-ebpf-gateway sh
 ```
 
 2. Comandos para Sair do Container
-3. 
+   
 Quando você está com o terminal "preso" dentro do container e quer voltar para o seu terminal normal do WSL2:
 
 Sair e manter o container rodando (Mais comum):
@@ -78,18 +78,41 @@ Você não precisa necessariamente "entrar" no container para rodar comandos ou 
 
 Estrutura básica:
 
-Bash
+```
 sudo docker exec -it <nome-do-container> <comando>
+```
 Exemplos práticos para o seu cenário:
 Verificar as interfaces de rede de dentro do gateway:
 
-Bash
+```
 sudo docker exec -it clab-gateway-ebpf-gateway ip addr
+```
 Instalar pacotes dentro do gateway (Alpine):
 
 Bash
+```
 sudo docker exec -it clab-gateway-ebpf-gateway apk add bpftool
+```
 Ver o status do eBPF dentro do gateway (quando compartilhado):
 
 Bash
+```
 sudo docker exec -it clab-gateway-ebpf-gateway bpftool prog show
+```
+
+### 🔀 Host vs Container: O que acontece em cada lugar?
+
+Para clarear de vez onde rodar cada comando no seu projeto atual, veja este resumo prático:
+
+| Ação | Onde Executar? | Comando Exemplo |
+| :--- | :--- | :--- |
+| **Compilar** o código C do eBPF (`clang`) | **Host** (WSL2) | `clang -O2 -target bpf -c xdp_monitor.c -o xdp_monitor.o` |
+| **Subir/Derrubar** o laboratório | **Host** (WSL2) | `sudo containerlab deploy -t topologia.yml` |
+| **Carregar o XDP** (Bypass de travas) | **Host** (WSL2) | `sudo ip link set dev vethxxxx xdpgeneric object ./xdp_monitor.o section xdp` |
+| **Gerar tráfego** de ataque (MQTT/Ping) | **Dentro** do Atacante | `sudo docker exec -it clab-gateway-ebpf-atacante ping 10.0.0.1` |
+| **Inspecionar logs/métricas** locais | **Dentro** do Gateway | `sudo docker exec -it clab-gateway-ebpf-gateway tcpdump -i eth1` |
+| **Monitorar mapas** com `bpftool` | **Host** (WSL2) | `sudo bpftool map dump id <ID_DO_MAPA>` |
+
+
+O comando docker exec funciona como um "portal": ele pega um comando que você digitou no Host, atravessa a barreira de isolamento do Container, executa lá dentro no namespace de rede correto e devolve o resultado na sua tela do WSL2.
+
