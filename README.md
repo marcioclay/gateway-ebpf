@@ -8,6 +8,8 @@
 [![Licença](https://img.shields.io/badge/licença-GPL--2.0-green)](LICENSE)
 [![Linguagem](https://img.shields.io/badge/linguagem-C-blue)](https://en.wikipedia.org/wiki/C_(programming_language))
 [![OS](https://img.shields.io/badge/OS-Ubuntu-orange)](https://ubuntu.com/)
+![Hping3](https://img.shields.io/badge/Hping3-security%20testing-red?style=for-the-badge&logo=linux) 
+![Tcpdump](https://img.shields.io/badge/Tcpdump-network%20analysis-orange?style=for-the-badge&logo=wireshark)
 
 ---
 ## 📖 Visão Geral
