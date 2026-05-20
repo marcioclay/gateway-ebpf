@@ -146,3 +146,43 @@ Se você precisar descobrir qual é o nome "verdadeiro" da interface no Host par
 sudo docker exec -it clab-gateway-ebpf-gateway ip -d link show eth1
 ```
 
+--- 
+
+## Purga Completa do Ambiente (Reset Total)
+Script sequencial para desalocar buffers do Kernel, destruir topologias órfãs, limpar pontes virtuais e efetuar o reset completo do motor Docker.
+
+# 1. Destruição da topologia Containerlab e limpeza de veths associadas
+```
+sudo containerlab destroy -t topologia.yml --cleanup
+```
+
+# 2. Exclusão de logs residuais de infraestrutura
+```
+sudo rm -rf clab-gateway-ebpf/
+```
+
+# 3. Purga completa de binários do Containerlab do sistema
+```
+sudo containerlab version purge
+sudo rm -f /usr/local/bin/containerlab
+sudo rm -rf /etc/containerlab/
+```
+
+# 4. Paragem e expurgo de infraestrutura Docker (Containers, Redes e Caches)
+```
+sudo docker stop $(sudo docker ps -aq) 2>/dev/null
+sudo docker system prune -a --volumes -f
+```
+
+# 5. Flush das tabelas de interfaces virtuais do Kernel do Host e desmontagem do BPF FS
+```
+sudo ip link flush type veth
+sudo umount /sys/fs/bpf 2>/dev/null
+```
+
+
+
+
+
+
+
