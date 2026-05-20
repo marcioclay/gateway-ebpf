@@ -23,6 +23,7 @@ topology:
         - ./xdp_monitor.o:/xdp_monitor.o
       exec:
         - ip addr add 10.0.0.1/24 dev eth1
+        - apk add --no-cache libbpf bpftool
 
     # --- ATACANTE ---
     atacante:
