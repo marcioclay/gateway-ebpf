@@ -198,20 +198,20 @@ sudo docker exec clab-gateway-ebpf-gateway apk add bpftool
 
 7.2 Carregar e pinar o programa XDP
 
-# Remover pin anterior (se existir) para evitar erros
+#### Remover pin anterior (se existir) para evitar erros
 
 ```
 sudo docker exec clab-gateway-ebpf-gateway rm -f /sys/fs/bpf/xdp_monitor_test
 ```
 
-# Carregar e pinar o programa no filesystem BPF
+#### Carregar e pinar o programa no filesystem BPF
 
 ```
 sudo docker exec clab-gateway-ebpf-gateway \
   bpftool prog load /xdp_monitor.o /sys/fs/bpf/xdp_monitor_test type xdp
 ```
 
-# Anexar à interface eth1
+#### Anexar à interface eth1
 
 ```
 sudo docker exec clab-gateway-ebpf-gateway \
