@@ -114,5 +114,35 @@ Para clarear de vez onde rodar cada comando no seu projeto atual, veja este resu
 | **Monitorar mapas** com `bpftool` | **Host** (WSL2) | `sudo bpftool map dump id <ID_DO_MAPA>` |
 
 
-O comando docker exec funciona como um "portal": ele pega um comando que você digitou no Host, atravessa a barreira de isolamento do Container, executa lá dentro no namespace de rede correto e devolve o resultado na sua tela do WSL2.
+O comando docker exec funciona como um "portal": ele pega um comando que você digitou no Host, atravessa a barreira de isolamento do Container, executa lá dentro no namespace de rede correto e devolve o resultado na sua tela do WSL2. 
+
+--- 
+
+## 1. O Comando para Listar as Interfaces
+Execute este comando no terminal do seu host:
+
+```
+sudo docker exec -it clab-gateway-ebpf-gateway ip --brief addr show
+```
+Por que usar a flag --brief? Ela limpa a saída poluída do Linux e te mostra um resumo direto: o nome da interface, o status (UP ou DOWN) e o endereço IP associado. Excelente para colocar em relatórios!
+
+## 2. O que você deve esperar ver na saída (Análise da Topologia)
+Ao rodar o comando, o Containerlab terá estruturado o seu gateway com as seguintes interfaces padrão: 
+
+
+### 🌐 Interfaces de Rede do Gateway no Containerlab
+
+| Interface | Tipo / Função | Descrição Técnica |
+| :--- | :--- | :--- |
+| **`lo`** | Loopback | Interface interna local (`127.0.0.1`). Padrão de isolamento de qualquer sistema operacional Linux. |
+| **`eth0`** | Gerência (Management) | Criada automaticamente pelo Docker/Containerlab. Possui um IP da rede interna do Docker (ex: `172.20.20.x`) e serve para o Host se comunicar com o container, além de prover acesso à internet (NAT). |
+| **`eth1`** *(ou eth2...)* | Link de Dados (Data Plane) | **A interface mais importante para o projeto.** É a ponta interna do par `veth` que o Containerlab conectou à topologia, interligando o Gateway aos outros nós (como Atacante ou Sensor) para tráfego de dados. |
+
+
+3. Como correlacionar com o Host (Para o eBPF)
+Se você precisar descobrir qual é o nome "verdadeiro" da interface no Host para carregar seu programa XDP (aquele comando sudo ip link set dev veth...), você pode rodar:
+
+```
+sudo docker exec -it clab-gateway-ebpf-gateway ip -d link show eth1
+```
 
