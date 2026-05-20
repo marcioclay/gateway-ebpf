@@ -176,7 +176,7 @@ docker ps --filter "label=containerlab=gateway-ebpf"
 ---
 
 
-## 6. Verificar Conectividade Inicial
+### 6. Verificar Conectividade Inicial
 
 Antes de ativar o filtro XDP, confirme que os nós se comunicam normalmente:
 
@@ -188,7 +188,7 @@ docker exec clab-gateway-ebpf-sensor ping -c 3 10.0.0.1
 
 ---
 
-## 7. Ativar o Filtro XDP
+### 7. Ativar o Filtro XDP
 
 7.1 Instalar o bpftool no node-b
 
@@ -221,7 +221,7 @@ sudo docker exec clab-gateway-ebpf-gateway \
 Por que pinar? Pinar o programa em /sys/fs/bpf/ mantém o BPF Map ativo na memória, permitindo ler o contador de drops mesmo após o comando de carregamento encerrar.
 
 
-## 🧹 Limpeza
+### 🧹 Limpeza
 
 Para destruir o laboratório e remover todos os containers:
 
@@ -231,7 +231,7 @@ sudo containerlab destroy -t topologia.yml
 
 
 
-## 📂 Estrutura do Projeto 
+### 📂 Estrutura do Projeto 
 
 ```
 .
@@ -253,7 +253,7 @@ sudo containerlab destroy -t topologia.yml
 
 ---
 
-## 📚 Referências 
+### 📚 Referências 
 
 - [Documentação Oficial do eBPF](https://ebpf.io/what-is-ebpf/)
 - [Documentação do Containerlab](https://containerlab.dev/quickstart/)
