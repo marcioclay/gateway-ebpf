@@ -3,6 +3,7 @@
 #include <linux/ip.h>
 #include <linux/tcp.h>
 #include <bpf/bpf_helpers.h>
+#include <bpf/bpf_endian.h> // Inclui os macros modernos de endianness como bpf_htons
 
 #define TARGET_PORT 80  // Porta do servidor leve simulado (substituindo o MQTT)
 
@@ -28,7 +29,6 @@ struct {
     __type(value, __u64);
 } proto_stats SEC(".maps");
 
-
 SEC("xdp")
 int xdp_monitor_prog(struct xdp_md *ctx) {
     void *data_end = (void *)(long)ctx->data_end;
@@ -39,8 +39,8 @@ int xdp_monitor_prog(struct xdp_md *ctx) {
     if ((void *)(eth + 1) > data_end) 
         return XDP_PASS;
         
-    // Filtra para processar apenas pacotes IPv4
-    if (eth->h_proto != __constant_htons(ETH_P_IP)) 
+    // Filtra para processar apenas pacotes IPv4 (usando bpf_htons)
+    if (eth->h_proto != bpf_htons(ETH_P_IP)) 
         return XDP_PASS;
 
     // 2. Camada 3: Validação do Cabeçalho IPv4
@@ -65,14 +65,18 @@ int xdp_monitor_prog(struct xdp_md *ctx) {
     // --- CENÁRIO 2: Identificação de Slow DoS (Análise Comportamental TCP) ---
     if (iph->protocol == 6) { // Protocolo TCP
         
-        // Proteção do Verificador: Calcula dinamicamente o início do cabeçalho TCP
-        // baseado no tamanho do cabeçalho IP (iph->ihl * 4)
-        struct tcphdr *tcp = (void *)iph + (iph->ihl * 4);
-        if ((void *)(tcp + 1) > data_end) 
+        // Proteção do Verificador: Isola o cálculo do tamanho do cabeçalho IP
+        int ip_hdr_len = iph->ihl * 4;
+        if (ip_hdr_len < sizeof(struct iphdr))
             return XDP_PASS;
 
-        // Filtra o tráfego destinado à porta do serviço monitorado (ex: Porta 80)
-        if (tcp->dest == __constant_htons(TARGET_PORT)) {
+        // Calcula a posição do ponteiro TCP de forma segura para o Verificador
+        struct tcphdr *tcp = (void *)iph + ip_hdr_len;
+        if ((void *)tcp + sizeof(struct tcphdr) > data_end) 
+            return XDP_PASS;
+
+        // Filtra o tráfego destinado à porta do serviço monitorado (usando bpf_htons)
+        if (tcp->dest == bpf_htons(TARGET_PORT)) {
             
             // A. Incrementa o contador volumétrico global de pacotes TCP no serviço
             stat_key = 1;
