@@ -9,6 +9,50 @@
 
 Este guia orienta a validação do protótipo através do estabelecimento de tráfego legítimo, simulação de ataque de inundação e extração de metricas diretamente do plano de dados.
 
+| Arquivo / Diretório | Camada de Execução | Descrição Técnica |
+| :--- | :--- | :--- |
+| **`xdp_monitor.c`** | Kernel Space | filtragem de pacotes na placa de rede, inspeciona os cabeçalhos L3/L4. |
+| **`topologia.yml`** | Infraestrutura | automatiza o deploy do laboratório. |
+| **`ddos.py`** | User Space | Script que consome a API do `bpftool`, extrai os contadores e calcula a taxa de pacotes por segundo (PPS). |
+
+--- 
+## 📋 Pré-requisitos e Instalação
+
+```
+# Atualize o índice de pacotes
+sudo apt update
+
+# Instale o compilador Clang e as ferramentas essenciais de compilação
+sudo apt install -y clang llvm make
+
+# Instale os cabeçalhos do Kernel correspondentes à sua versão atual
+sudo apt install -y linux-headers-$(uname -r)
+```
+---
+## 🔄 Fluxo de Execução e Ciclo de Vida do Pacote
+
+O diagrama abaixo descreve o fluxo de execução assíncrono entre o Plano de Dados (Kernel) e o Plano de Controle (User Space) a cada pacote recebido na interface `eth1` do Gateway IoT:
+
+## 🔄 Fluxo de Execução
+
+[ Atacante / Cliente ]
+        │
+        ▼
+GATEWAY IoT (Kernel)
+        │ Pacote chega em eth1 → [ XDP: xdp_monitor.c ]
+        │ └─► Parsing L3/L4 → UDP/TCP?
+        │ └─► Atualiza mapa proto_stats (hash, 16k entradas)
+        ▼
+/sys/fs/bpf/proto_stats (pinned)
+
+GATEWAY IoT (User Space)
+        │ Script Python ddos.py consulta bpftool map
+        │ Extrai valores das chaves (UDP/TCP)
+        ▼
+Saída: Terminal (tempo | PPS) + CSV (metricas_ddos_volumetrico.csv)
+
+
+---
 ### Índice de Testes
 ### 1. Simulação de Ataque DDoS Volumétrico (Atacante)
 
