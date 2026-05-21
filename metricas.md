@@ -10,48 +10,7 @@
 Este guia orienta a validação do protótipo através do estabelecimento de tráfego legítimo, simulação de ataque de inundação e extração de metricas diretamente do plano de dados.
 
 ### Índice de Testes
-### 1. Estabelecimento de Tráfego MQTT Legítimo (Sensor)
-
-1.1 Iniciar o Sensor Simulador
-
-```
-docker exec -it clab-ebpf-mqtt-sensor python3 /src/sensor.py
-```
-
-1.2 Validação de Conexão (CONNECT) e Inscrição (SUBSCRIBE) no Broker 
-
-```
-# Verificação da porta MQTT
-docker exec -it clab-ebpf-mqtt-gateway ss -tlnp | grep 1883
-```
-
-```
-# log do Mosquitto no Gateway
-docker exec -it clab-ebpf-mqtt-gateway tail -n 20 /var/log/mosquitto/mosquitto.log
-```
-
----
-
-Caso o comando acima não funcione, execute os códigos abaixo.
-
-```
-# Encerrar MQTT
-docker exec -it clab-ebpf-mqtt-gateway pkill mosquitto
-```
-
-```
-# Iniciar MQTT (sem a flag -d):
-# Terminal deve esta aberto, ele vai mostrar a "tela de log":
-docker exec -it clab-ebpf-mqtt-gateway mosquitto -c /etc/mosquitto/mosquitto.conf
-```
-
-```
-# Em outro terminal execute o sensor.py
-docker exec -it clab-ebpf-mqtt-sensor python3 /src/sensor.py
-```
-
-
-### 2. Simulação de Ataque DDoS Volumétrico (Atacante)
+### 1. Simulação de Ataque DDoS Volumétrico (Atacante)
 
 2.1 Execução do UDP Flood via hping3
 
