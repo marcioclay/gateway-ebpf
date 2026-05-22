@@ -11,7 +11,45 @@
 Este guia orienta a validação do protótipo através do estabelecimento de tráfego legítimo, simulação de ataque de inundação e extração de metricas diretamente do plano de dados.
 
 ### Índice de Testes
+
+### Passo 1: Inicializar a Infraestrutura de Rede
+
+```
+sudo containerlab deploy -t topologia.yml
+```
+
+Passo 2: Terminal A -  Monitoramento eBPF (ddos.py)
+
+```
+sudo docker exec -it -w /metricas clab-gateway-ebpf-gateway python3 ddos.py
+```
+
+Passo 3: Terminal B - Visualizar Inscrição (Subscription) MQTT
+
+```
+# Instalar MQTT
+sudo docker exec -it clab-gateway-ebpf-gateway apk add --no-cache mosquitto-clients
+```
+
+```
+sudo docker exec -it clab-gateway-ebpf-gateway mosquitto_sub -h 127.0.0.1 -t "v1/dispositivos/#" -v
+```
+
+Passo 4: Terminal C (Cliente/Sensor) - Iniciar Tráfego Legítimo
+```
+sudo docker exec -it -w /metricas clab-gateway-ebpf-cliente python3 sensor_mqtt.py
+```
+
+Passo 5: Terminal D (Atacante) - Disparar o Ataque DDoS Volumétrico
+```
+sudo docker exec -it clab-gateway-ebpf-atacante hping3 --udp --flood -p 80 -I eth1 10.0.0.1
+```
+
+
+
 ### 1. Simulação de Ataque DDoS Volumétrico (Atacante)
+
+
 
 2.1 Execução do UDP Flood via hping3
 
