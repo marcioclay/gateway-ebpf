@@ -80,44 +80,38 @@ $$\text{Delta TCP} = \text{Total TCP}_{(t)} - \text{Total TCP}_{(t-1)}$$
 * **Aplicação Científica:** Comprova o isolamento de tráfego. Se o Delta TCP se mantiver estável enquanto o PPS UDP explode, fica provado empiricamente que o mecanismo de descarte ou contabilização precoce do XDP protegeu os recursos do barramento de comunicação IoT.
 
 ---
-### Índice de Testes
-### 1. Simulação de Ataque DDoS Volumétrico (Atacante)
 
-2.1 Execução do UDP Flood via hping3
+### 4. Consumo de CPU
+* **Objetivo:** Comprovar o baixo custo computacional do processamento em nível de driver (XDP) em comparação com abordagens tradicionais em Espaço de Usuário ou Netfilter/Iptables.
+* **Métrica:** Porcentagem de uso de CPU do container do Gateway sob estresse de ataque.
+* **Validação:** Sob ataque massivo, firewalls comuns tendem a elevar o consumo de CPU para 100% (causando negação de serviço legítimo). O XDP deve manter o consumo de CPU em níveis mínimos.
 
-```
-Instalar hping3
-docker exec -it clab-ebpf-mqtt-atacante apk add --no-cache hping3
-```
+### 5. Resiliência do Tráfego Legítimo IoT (Mensageria MQTT)
+* **Objetivo:** Demonstrar o isolamento de desempenho. Provar que o tráfego malicioso em L3/L4 (UDP Flood) é mitigado de forma tão precoce que não afeta a estabilidade das conexões persistentes de sensores reais.
+* **Métrica:** Taxa de entrega de mensagens (*Publish*) e persistência da conexão TCP do protocolo MQTT (Porta 1883) do nó Cliente em direção ao Broker.
+* **Validação:** Manutenção do canal de comunicação do sensor ativo e funcional, sem quedas por *timeout* ou perda de pacotes legítimos durante a inundação.
 
-```
-# Execução ataque DDos
-sudo docker exec -it clab-ebpf-mqtt-atacante hping3 --udp -p 1883 --flood 10.0.0.1
-```
+### 6. Latência de Passagem (RTT - Round Trip Time)
+* **Objetivo:** Avaliar o atraso introduzido pelo filtro eBPF no tráfego que recebe o veredito de encaminhamento.
+* **Métrica:** Tempo de ida e volta em milissegundos (ms) dos pacotes legítimos que atravessam o Gateway.
+* **Validação:** A latência do tráfego legítimo deve se manter estável (sub-milissegundos), provando que a execução do código BPF no Kernel não gera gargalos na rede.
 
- 3. Extração de metricas do artigo para DDoS (Gateway)
+---
 
-3.1 Volumetria de Pacotes no XDP (Taxa PPS)
+### 📊 Matriz de Correlação de Métricas para Cenários de Teste
 
-```
-# Pacotes por segundo
-docker exec -it clab-ebpf-mqtt-gateway ip -s link show eth1
-```
+A avaliação do ecossistema para a composição dos resultados do artigo adota a seguinte matriz estruturada:
 
-3.2 Impacto de Recursos de Hardware (Consumo de CPU)
+| Dimensão Avaliada | Métrica Principal | Unidade | Componente Impactado | Ferramenta de Coleta |
+| :--- | :--- | :---: | :--- | :--- |
+| **Intensidade do Ataque** | Vazão Volumétrica | PPS | Interface de Rede (`eth1`) | `ddos.py` (eBPF Map Key 0) |
+| **Sobrevivência IoT** | Integridade do Fluxo | % Mensagens | Conectividade TCP MQTT | Logs do Cliente Mosquitto |
+| **Custo de Hardware** | Sobrecarga de Sistema | % CPU | Processador do Gateway | `docker stats` / `top` |
+| **Atraso de Rede** | Tempo de Trânsito | ms | Pilha de Protocolos | `ping` / Latência de aplicação |
 
-```
-docker exec -it clab-ebpf-mqtt-gateway top
-```
 
-4. Resultado do teste 1 (DDoS Volumétrico - Apenas Monitoramento)
 
-Durante o ataque de inundação UDP de alto volume (`hping3 --flood`), o comportamento de hardware do Gateway IoT apresentou alta estabilidade, validando a eficiência do eBPF em processar pacotes em baixo nível:
+---
 
-- **Consumo de CPU no Kernel (System):** ~8.4%
-- **Consumo de CPU no Usuário (User):** ~2.9%
-- **Capacidade Ociosa do Sistema (Idle):** ~82.9%
-
---- 
 
 
