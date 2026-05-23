@@ -5,7 +5,7 @@
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_endian.h> // Inclui os macros modernos de endianness como bpf_htons
 
-#define TARGET_PORT 80  // Porta do servidor leve simulado (substituindo o MQTT)
+#define TARGET_PORT 1883 
 
 /* * MAPA 1: Tabela comportamental de conexões TCP ativas por IP de Origem.
  * Usado para detectar Slow DoS através do rastreamento de IPs persistentes 
