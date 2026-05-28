@@ -20,12 +20,10 @@ topology:
       binds:
         - /sys/fs/bpf:/sys/fs/bpf:shared
         - ./:/lab/             
-        - ./mosquitto.conf:/etc/mosquitto/mosquitto.conf 
       exec:
         - ip addr add 10.0.0.1/24 dev eth1
         - ip link set eth1 up
-        # Inicializa o broker MQTT em background
-        - mosquitto -d -c /etc/mosquitto/mosquitto.conf
+        
 
     # --- ATACANTE  ---
     atacante:
@@ -34,8 +32,8 @@ topology:
       binds:
         - ./src:/src           
       exec:
-        - apt-get update && apt-get install -y hping3 python3 python3-pip iproute2 iputils-ping
-        - pip3 install paho-mqtt
+        - apt-get update 
+        - apt-get install -y hping3 python3 python3-pip iproute2 iputils-ping
         - ip addr add 10.0.0.10/24 dev eth1
         - ip link set eth1 up
         
@@ -47,8 +45,8 @@ topology:
       binds:
         - ./src:/src           
       exec:
-        - apt-get update && apt-get install -y python3 python3-pip iproute2 iputils-ping
-        - pip3 install paho-mqtt
+        - apt-get update 
+        - apt-get install -y python3 python3-pip iproute2 iputils-ping
         - ip addr add 10.0.0.20/24 dev eth1
         - ip link set eth1 up
         
