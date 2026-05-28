@@ -116,8 +116,17 @@ Clone o repositório e acesse o diretório do laboratório:
 
 ```bash
 git clone https://github.com/marcioclay/gateway-ebpf.git
-cd gateway-ebpf
+
 ```
+Instalação de imagem ubuntu com ebpf
+```
+# A. Entre na pasta ebpf-host dentro do seu repositório local
+cd gateway-ebpf/ebpf-host/
+
+# B. Construa a imagem localmente
+sudo docker build -t ebpf-host:latest .
+```
+
 
 > 📁 Arquivos principais:
 > - `topologia.yml` — Definição da topologia Containerlab
@@ -126,7 +135,17 @@ cd gateway-ebpf
 
 ---
 
-### 4. Compilar o Programa eBPF
+### 4. Instalar na raiz - para iniciar o MQTT
+
+```
+cat <<EOF > mosquitto.conf
+listener 1883
+allow_anonymous true
+EOF
+```
+
+
+### 5. Compilar o Programa eBPF
 
 O script `compile.sh` usa um **container nicolaka/netshoot como ambiente de build**, dispensando a instalação de ferramentas de compilação no host.Isso evita que você precise instalar localmente todas as dependências de eBPF (que podem ser pesadas ou conflitar) diretamente no seu sistema host.
 
@@ -155,7 +174,7 @@ Success! xdp_monitor.o created. 😱😱😱
 
 ---
 
-### 5. Deploy da Topologia
+### 6. Deploy da Topologia
 
 ```bash
 sudo containerlab deploy -t topologia.yml --reconfigure
