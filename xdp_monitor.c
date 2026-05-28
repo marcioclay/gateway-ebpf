@@ -1,24 +1,30 @@
 #include <linux/bpf.h>
 #include <linux/if_ether.h>
 #include <linux/ip.h>
+#include <linux/tcp.h>
 #include <bpf/bpf_helpers.h>
+#include <bpf/bpf_endian.h> // Inclui os macros modernos de endianness como bpf_htons
 
-/* MAPA 1: Contador de pacotes por IP de origem (Métrica principal de DDoS) */
+#define TARGET_PORT 1883 
+
+/* * MAPA 1: Tabela comportamental de conexões TCP ativas por IP de Origem.
+ * Usado para detectar Slow DoS através do rastreamento de IPs persistentes 
+ * que mantêm atividade estendida de baixo volume na porta alvo.
+ */
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 1024);
+    __uint(max_entries, 4096);
     __type(key, __u32);   // IP de origem
-    __type(value, __u64); // Quantidade de pacotes
-} ip_stats SEC(".maps");
+    __type(value, __u64); // Contador de pacotes TCP por host nesta porta
+} tcp_sessions SEC(".maps");
 
-/* MAPA 2: Estatísticas globais por protocolo (eMetrics do Artigo) 
-   Key 0: Total ICMP
-   Key 1: Total UDP (Foco do ataque hping3)
-   Key 2: Total TCP
-*/
+/* * MAPA 2: Estatísticas globais volumétricas do plano de dados (Overhead/Métricas).
+ * Key 0: Total de pacotes UDP (Métrica de inundação / DDoS Volumétrico)
+ * Key 1: Total de pacotes TCP na porta do serviço alvo (Métrica de Slow DoS)
+ */
 struct {
     __uint(type, BPF_MAP_TYPE_ARRAY);
-    __uint(max_entries, 3);
+    __uint(max_entries, 2);
     __type(key, __u32);
     __type(value, __u64);
 } proto_stats SEC(".maps");
@@ -28,47 +34,71 @@ int xdp_monitor_prog(struct xdp_md *ctx) {
     void *data_end = (void *)(long)ctx->data_end;
     void *data = (void *)(long)ctx->data;
 
-    // L2: Ethernet
+    // 1. Camada 2: Validação do Cabeçalho Ethernet
     struct ethhdr *eth = data;
-    if ((void *)(eth + 1) > data_end) return XDP_PASS;
-    
-    // Filtra apenas IPv4 (0x0800)
-    if (eth->h_proto != __constant_htons(ETH_P_IP)) return XDP_PASS;
+    if ((void *)(eth + 1) > data_end) 
+        return XDP_PASS;
+        
+    // Filtra para processar apenas pacotes IPv4 (usando bpf_htons)
+    if (eth->h_proto != bpf_htons(ETH_P_IP)) 
+        return XDP_PASS;
 
-    // L3: IP
+    // 2. Camada 3: Validação do Cabeçalho IPv4
     struct iphdr *iph = data + sizeof(struct ethhdr);
-    if ((void *)(iph + 1) > data_end) return XDP_PASS;
+    if ((void *)(iph + 1) > data_end) 
+        return XDP_PASS;
 
     __u32 src_ip = iph->saddr;
-    __u32 proto_key;
-    __u64 *cnt, *ip_cnt;
+    __u32 stat_key;
+    __u64 *cnt;
 
-    // 1. Atualiza contador por IP (Identifica quem está gerando o volume)
-    ip_cnt = bpf_map_lookup_elem(&ip_stats, &src_ip);
-    if (ip_cnt) {
-        __sync_fetch_and_add(ip_cnt, 1);
-    } else {
-        __u64 init_val = 1;
-        bpf_map_update_elem(&ip_stats, &src_ip, &init_val, BPF_ANY);
+    // --- CENÁRIO 1: DDoS Volumétrico (UDP Flood via hping3/iperf3) ---
+    if (iph->protocol == 17) { // Protocolo UDP
+        stat_key = 0;
+        cnt = bpf_map_lookup_elem(&proto_stats, &stat_key);
+        if (cnt) {
+            __sync_fetch_and_add(cnt, 1);
+        }
+        return XDP_PASS; // Apenas detecção: permite a passagem do pacote
     }
 
-    // 2. Classificação por Protocolo (Métricas de inundação)
-    if (iph->protocol == 1) {      // ICMP
-        proto_key = 0;
-    } else if (iph->protocol == 17) { // UDP (Alvo do hping3 no artigo)
-        proto_key = 1;
-    } else if (iph->protocol == 6) {  // TCP
-        proto_key = 2;
-    } else {
-        return XDP_PASS;
+    // --- CENÁRIO 2: Identificação de Slow DoS (Análise Comportamental TCP) ---
+    if (iph->protocol == 6) { // Protocolo TCP
+        
+        // Proteção do Verificador: Isola o cálculo do tamanho do cabeçalho IP
+        int ip_hdr_len = iph->ihl * 4;
+        if (ip_hdr_len < sizeof(struct iphdr))
+            return XDP_PASS;
+
+        // Calcula a posição do ponteiro TCP de forma segura para o Verificador
+        struct tcphdr *tcp = (void *)iph + ip_hdr_len;
+        if ((void *)tcp + sizeof(struct tcphdr) > data_end) 
+            return XDP_PASS;
+
+        // Filtra o tráfego destinado à porta do serviço monitorado (usando bpf_htons)
+        if (tcp->dest == bpf_htons(TARGET_PORT)) {
+            
+            // A. Incrementa o contador volumétrico global de pacotes TCP no serviço
+            stat_key = 1;
+            cnt = bpf_map_lookup_elem(&proto_stats, &stat_key);
+            if (cnt) {
+                __sync_fetch_and_add(cnt, 1);
+            }
+
+            // B. Rastreia o comportamento do host (Sessão TCP Ativa) no mapa HASH
+            __u64 *tcp_cnt = bpf_map_lookup_elem(&tcp_sessions, &src_ip);
+            if (tcp_cnt) {
+                // Se o IP já existe, incrementa a atividade dele na sessão
+                __sync_fetch_and_add(tcp_cnt, 1);
+            } else {
+                // Se for um novo IP iniciando conexão, cria o registro inicial
+                __u64 init_val = 1;
+                bpf_map_update_elem(&tcp_sessions, &src_ip, &init_val, BPF_ANY);
+            }
+        }
     }
 
-    cnt = bpf_map_lookup_elem(&proto_stats, &proto_key);
-    if (cnt) {
-        __sync_fetch_and_add(cnt, 1);
-    }
-
-    return XDP_PASS; // Apenas monitorando (Detecção), sem descartar ainda
+    return XDP_PASS; // Mantém a ação XDP_PASS para focar estritamente em monitoramento
 }
 
 char _license[] SEC("license") = "GPL";
