@@ -1,45 +1,57 @@
-name: gateway-ebpf
+name: lab-ebpf
 
 topology:
   nodes:
+    
     switch:
       kind: linux
       image: nicolaka/netshoot:latest
       exec:
         - ip link add br0 type bridge
         - ip link set br0 up
-        # script links
         - sh -c 'sleep 2 && ip link set eth1 master br0 && ip link set eth1 up'
         - sh -c 'sleep 2 && ip link set eth2 master br0 && ip link set eth2 up'
         - sh -c 'sleep 2 && ip link set eth3 master br0 && ip link set eth3 up'
 
-    # --- GATEWAY IOT ---
+    # --- GATEWAY ---
     gateway:
       kind: linux
-      image: nicolaka/netshoot:latest
+      image: ebpf-host:latest  
       binds:
-        - ./xdp_monitor.o:/xdp_monitor.o
+        - /sys/fs/bpf:/sys/fs/bpf:shared
+        - ./:/lab/             
+        - ./mosquitto.conf:/etc/mosquitto/mosquitto.conf 
       exec:
         - ip addr add 10.0.0.1/24 dev eth1
-        - apk add --no-cache libbpf bpftool
+        - ip link set eth1 up
+        # Inicializa o broker MQTT em background
+        - mosquitto -d -c /etc/mosquitto/mosquitto.conf
 
-    # --- ATACANTE ---
+    # --- ATACANTE  ---
     atacante:
       kind: linux
-      image: nicolaka/netshoot:latest
+      image: ubuntu:22.04
       binds:
-        - ./src:/src
+        - ./src:/src           
       exec:
+        - apt-get update && apt-get install -y hping3 python3 python3-pip iproute2 iputils-ping
+        - pip3 install paho-mqtt
         - ip addr add 10.0.0.10/24 dev eth1
+        - ip link set eth1 up
+        
 
-    # --- SENSOR ---
+    # --- SENSOR  ---
     sensor:
       kind: linux
-      image: nicolaka/netshoot:latest
+      image: ubuntu:22.04
       binds:
-        - ./src:/src
+        - ./src:/src           
       exec:
+        - apt-get update && apt-get install -y python3 python3-pip iproute2 iputils-ping
+        - pip3 install paho-mqtt
         - ip addr add 10.0.0.20/24 dev eth1
+        - ip link set eth1 up
+        
 
   links:
     - endpoints: ["gateway:eth1", "switch:eth1"]
