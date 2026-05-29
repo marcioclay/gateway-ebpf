@@ -151,38 +151,89 @@ sudo docker exec -it clab-gateway-ebpf-gateway ip -d link show eth1
 ## Purga Completa do Ambiente (Reset Total)
 Script sequencial para desalocar buffers do Kernel, destruir topologias órfãs, limpar pontes virtuais e efetuar o reset completo do motor Docker.
 
-# 1. Destruição da topologia Containerlab e limpeza de veths associadas
+### 1. Destruição da topologia Containerlab e limpeza de veths associadas
 ```
 sudo containerlab destroy -t topologia.yml --cleanup
 ```
 
-# 2. Exclusão de logs residuais de infraestrutura
+### 2. Exclusão de logs residuais de infraestrutura
 ```
 sudo rm -rf clab-gateway-ebpf/
 ```
 
-# 3. Purga completa de binários do Containerlab do sistema
+### 3. Purga completa de binários do Containerlab do sistema
 ```
 sudo containerlab version purge
 sudo rm -f /usr/local/bin/containerlab
 sudo rm -rf /etc/containerlab/
 ```
 
-# 4. Paragem e expurgo de infraestrutura Docker (Containers, Redes e Caches)
+### 4. Paragem e expurgo de infraestrutura Docker (Containers, Redes e Caches)
 ```
 sudo docker stop $(sudo docker ps -aq) 2>/dev/null
 sudo docker system prune -a --volumes -f
 ```
 
-# 5. Flush das tabelas de interfaces virtuais do Kernel do Host e desmontagem do BPF FS
+### 5. Flush das tabelas de interfaces virtuais do Kernel do Host e desmontagem do BPF FS
 ```
 sudo ip link flush type veth
 sudo umount /sys/fs/bpf 2>/dev/null
 ```
 
+--- 
+### COMANDO PARA ANALISE DE HARDWARE
 
 
+1. Ver o consumo de recursos em tempo real (Todos os nós)
+Este é o comando mais prático para ver quanto cada contêiner está exigindo da sua máquina agora. Ele mostra a CPU relativa ao host, a memória usada e o limite máximo atual que o contêiner pode expandir (que por padrão é o total da sua VM).
 
+```
+sudo docker stats
+```
+Para sair dessa tela, pressione Ctrl + C.
 
+2. Inspecionar as especificações e limites configurados no Docker
+Se você quiser ver exatamente quanta CPU e memória o Docker reservou ou limitou para um nó específico (antes de rodar o comando de alteração), você pode inspecionar as propriedades de pacotes do contêiner.
+
+Para o Gateway:
+
+```
+sudo docker inspect clab-lab-ebpf-gateway | grep -iE "cpus|memory|cpuset"
+```
+
+Para o Atacante:
+
+```
+sudo docker inspect clab-lab-ebpf-atacante | grep -iE "cpus|memory|cpuset"
+```
+
+Se a saída de NanoCPUs, Memory e CpusetCpus vier zerada 0 ou vazia "", significa que o contêiner está em modo padrão: sem limites, podendo usar 100% de todos os núcleos e da memória da sua VM hospedeira.
+
+3. Ver o hardware de dentro do próprio contêiner
+
+Você também pode "entrar" na perspectiva do nó para ver como o sistema operacional interno enxerga o hardware.
+
+Para ver os processos internos e o uso de CPU do nó:
+
+```
+sudo docker exec -it clab-lab-ebpf-gateway top
+```
+(Pressione q para sair).
+
+Para ver a memória do ponto de vista do contêiner (se disponível no binário da imagem):
+
+```
+sudo docker exec -it clab-lab-ebpf-gateway free -m
+```
+
+4. Bônus: Ver o hardware total da sua Máquina Virtual (Host)
+
+Como os contêineres compartilham o Kernel e o hardware da VM onde o Containerlab está rodando, é bom saber o total disponível na máquina inteira:
+
+Ver total de núcleos e modelo de CPU da VM: lscpu ou lscpu | grep -E '^CPU\(s\):|Model name'
+
+Ver total de memória RAM da VM: free -h
+
+--- 
 
 
