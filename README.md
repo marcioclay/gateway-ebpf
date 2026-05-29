@@ -207,34 +207,36 @@ docker exec clab-gateway-ebpf-sensor ping -c 3 10.0.0.1
 
 ---
 
-### 7. Ativar o Filtro XDP
+### 7. Executar script 
 
-7.1 Instalar o bpftool no node-b
+- instala python
+- instala MQTT
 
-```
-sudo docker exec clab-gateway-ebpf-gateway apk add bpftool
-```
+  ```
+  chmod +x setup.sh
+  ./setup.sh
+  ```
 
-7.2 Carregar e pinar o programa XDP
+### 8. Ativar o Filtro XDP
+
+8.1 Carregar e pinar o programa XDP
 
 #### Remover pin anterior (se existir) para evitar erros
 
 ```
-sudo docker exec clab-gateway-ebpf-gateway rm -f /sys/fs/bpf/xdp_monitor_test
+sudo docker exec -it clab-lab-ebpf-gateway rm -f /sys/fs/bpf/xdp_monitor_test
 ```
 
 #### Carregar e pinar o programa no filesystem BPF
 
 ```
-sudo docker exec clab-gateway-ebpf-gateway \
-  bpftool prog load /xdp_monitor.o /sys/fs/bpf/xdp_monitor_test type xdp
+sudo docker exec -it clab-lab-ebpf-gateway bpftool prog load /lab/xdp_monitor.o /sys/fs/bpf/xdp_monitor_test type xdp
 ```
 
 #### Anexar à interface eth1
 
 ```
-sudo docker exec clab-gateway-ebpf-gateway \
-  ip link set dev eth1 xdpgeneric pinned /sys/fs/bpf/xdp_monitor_test
+sudo docker exec -it clab-lab-ebpf-gateway ip link set dev eth1 xdpgeneric pinned /sys/fs/bpf/xdp_monitor_test
 ```
 
 Por que pinar? Pinar o programa em /sys/fs/bpf/ mantém o BPF Map ativo na memória, permitindo ler o contador de drops mesmo após o comando de carregamento encerrar.
