@@ -12,6 +12,26 @@ Este guia orienta a validação do protótipo através do estabelecimento de tr�
 
 ### Índice de Testes
 
+Ao reiniciar o laboratório o Kernel do Linux é completamente zerado, isto significa que os contêineres foram parados e o programa eBPF foi apagado da memória. Caso esse seja o caso, siga essa etapas: 
+
+```
+sudo containerlab deploy -t topologia.yml
+```
+```
+# executar o script para reinstalar o Mosquitto, o Python e a biblioteca do MQTT
+./setup.sh
+```
+```
+# 1. Garantir que o diretório de pins antigo seja limpo
+sudo docker exec -it clab-lab-ebpf-gateway rm -f /sys/fs/bpf/xdp_monitor_test
+
+# 2. Carregar e pinar o programa de novo
+sudo docker exec -it clab-lab-ebpf-gateway bpftool prog load /lab/xdp_monitor.o /sys/fs/bpf/xdp_monitor_test type xdp
+
+# 3. Anexar o filtro à interface eth1
+sudo docker exec -it clab-lab-ebpf-gateway ip link set dev eth1 xdpgeneric pinned /sys/fs/bpf/xdp_monitor_test
+```
+
 ### Passo 1: Inicializar a Infraestrutura de Rede e MQTT
 
 ```
