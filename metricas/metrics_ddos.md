@@ -49,79 +49,46 @@ No Terminal 2 (Ativar o emissor no nó sensor):
 sudo docker exec -it clab-lab-ebpf-sensor python3 /src/sensor.py
 ```
 
---- 
 
 ---
 
+### Passo 2: Ataque DDos
 
----
+Terminal A -  Janela de Observação
 
-Passo 2: Terminal A -  Monitoramento eBPF (ddos.py)
-
-```
-sudo docker exec -it -w /metricas clab-gateway-ebpf-gateway python3 ddos.py
-```
-
-Passo 3: Terminal B - Visualizar Inscrição (Subscription) MQTT
+Mapas - proto_stats e tcp_sessions
 
 ```
-# Instalar MQTT
-sudo docker exec -it clab-gateway-ebpf-gateway apk add --no-cache mosquitto-clients
-```
-
-```
-sudo docker exec -it clab-gateway-ebpf-gateway mosquitto_sub -h 127.0.0.1 -t "v1/dispositivos/#" -v
-```
-
-Passo 4: Terminal C (Cliente/Sensor) - Iniciar Tráfego Legítimo
-```
-sudo docker exec -it -w /metricas clab-gateway-ebpf-cliente python3 sensor_mqtt.py
-```
-
-Passo 5: Terminal D (Atacante) - Disparar o Ataque DDoS Volumétrico
-```
-sudo docker exec -it clab-gateway-ebpf-atacante hping3 --udp --flood -p 80 -I eth1 10.0.0.1
+# Deixe este comando rodando na tela. Ele vai atualizar sozinho.
+watch -n 1 sudo docker exec -it clab-lab-ebpf-gateway bpftool map dump id 55
 ```
 
 
-
-### 1. Simulação de Ataque DDoS Volumétrico (Atacante)
-
-
-
-2.1 Execução do UDP Flood via hping3
-
+#### Caso tenha reiniciado será necessário atualizar o id do mapa.
 ```
-Instalar hping3
-docker exec -it clab-ebpf-mqtt-atacante apk add --no-cache hping3
+sudo docker exec -it clab-lab-ebpf-gateway bpftool map list
 ```
-
 ```
-# Execução ataque DDos
-sudo docker exec -it clab-ebpf-mqtt-atacante hping3 --udp -p 1883 --flood 10.0.0.1
+# Mensagem na tela
+120: hash  name proto_stats  flags 0x0
+	key 4B  value 8B  max_entries 10  memlock 4096B
+121: hash  name ip_stats     flags 0x0
+	key 4B  value 16B  max_entries 1024  memlock 8192B
+# Procure pelos nomes dos seus mapas (como proto_stats).
+# O número que aparece logo no início da linha (ex: 120, 121) é o seu novo ID.
 ```
 
- 3. Extração de metricas do artigo para DDoS (Gateway)
-
-3.1 Volumetria de Pacotes no XDP (Taxa PPS)
+Terminal B - Ativar sensor legítimo - nó sensor
 
 ```
-# Pacotes por segundo
-docker exec -it clab-ebpf-mqtt-gateway ip -s link show eth1
+sudo docker exec -it clab-lab-ebpf-sensor python3 /src/sensor.py
 ```
 
-3.2 Impacto de Recursos de Hardware (Consumo de CPU)
+Terminal C - Ativar ataque DDos no atacante
 
 ```
-docker exec -it clab-ebpf-mqtt-gateway top
+sudo docker exec -it clab-lab-ebpf-atacante hping3 --udp -p 1883 --flood 10.0.0.1
 ```
 
-4. Resultado do teste 1 (DDoS Volumétrico - Apenas Monitoramento)
 
-Durante o ataque de inundação UDP de alto volume (`hping3 --flood`), o comportamento de hardware do Gateway IoT apresentou alta estabilidade, validando a eficiência do eBPF em processar pacotes em baixo nível:
 
-- **Consumo de CPU no Kernel (System):** ~8.4%
-- **Consumo de CPU no Usuário (User):** ~2.9%
-- **Capacidade Ociosa do Sistema (Idle):** ~82.9%
-
---- 
