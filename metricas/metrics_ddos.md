@@ -89,6 +89,9 @@ Terminal C - Ativar ataque DDos no atacante
 ```
 sudo docker exec -it clab-lab-ebpf-atacante hping3 --udp -p 1883 --flood 10.0.0.1
 ```
+#### Observação: "Em ambientes virtualizados (Containerlab/Docker), a taxa de injeção de pacotes via software (veth) gera um gargalo no próprio nó atacante (exibindo consumo de até 180% de CPU para a geração do tráfego malicioso). Devido à eficiência da pilha de rede do Linux no descarte de pacotes UDP direcionados a portas fechadas, o nó Gateway consegue processar o volume gerado em modo XDP_PASS sem atingir a exaustão de recursos."
 
-
+| CONTAINER ID |            NAME          | CPU % | MEM USAGE / LIMIT   | MEM % | NET I/O       | BLOCK I/O       | PIDS |
+| b235ea9d8da8 | clab-lab-ebpf-gateway    | 0.05% | 8.086MiB / 2.832GiB | 0.28% | 14.4MB / 61kB | 12.6MB / 41.8MB | 2 |
+| ee11dc9f8119 | clab-lab-ebpf-atacante | 185.94% | 46.23MiB / 2.832GiB | 1.59% | 152MB / 377kB | 6.35MB / 624MB | 2 | 
 
