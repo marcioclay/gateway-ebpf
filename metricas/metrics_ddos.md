@@ -39,11 +39,7 @@ sudo containerlab deploy -t topologia.yml
 ```
 
 ### Passo 2: Habilitar conexões e testes MQTT
-```
-# Conteúdo do mosquitto.conf e habilitar conexões
-listener 1883 0.0.0.0
-allow_anonymous true
-```
+
 
 ```
 # Reiniciar MQTT
