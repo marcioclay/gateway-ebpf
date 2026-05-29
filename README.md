@@ -139,7 +139,7 @@ sudo docker build -t ebpf-host:latest .
 
 ```
 cat <<EOF > mosquitto.conf
-listener 1883
+listener 1883 0.0.0.0
 allow_anonymous true
 EOF
 ```
