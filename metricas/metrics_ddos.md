@@ -15,7 +15,7 @@ Este guia orienta a validação do protótipo através do estabelecimento de tr�
 Ao reiniciar o laboratório o Kernel do Linux é completamente zerado, isto significa que os contêineres foram parados e o programa eBPF foi apagado da memória. Caso esse seja o caso, siga essa etapas: 
 
 ```
-sudo containerlab deploy -t topologia.yml
+sudo containerlab deploy -t topologia.yml -- reconfigure
 ```
 ```
 # executar o script para reinstalar o Mosquitto, o Python e a biblioteca do MQTT
