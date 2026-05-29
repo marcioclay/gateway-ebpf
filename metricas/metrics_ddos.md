@@ -12,11 +12,45 @@ Este guia orienta a validação do protótipo através do estabelecimento de tr�
 
 ### Índice de Testes
 
-### Passo 1: Inicializar a Infraestrutura de Rede
+### Passo 1: Inicializar a Infraestrutura de Rede e MQTT
 
 ```
 sudo containerlab deploy -t topologia.yml
 ```
+
+### Passo 2: Habilitar conexões e testes MQTT
+```
+# Conteúdo do mosquitto.conf e habilitar conexões
+listener 1883 0.0.0.0
+allow_anonymous true
+```
+
+```
+# Reiniciar MQTT
+sudo docker exec clab-lab-ebpf-gateway pkill mosquitto || true
+sudo docker exec clab-lab-ebpf-gateway mosquitto -d -c /lab/mosquitto.conf
+```
+
+```
+# Executar e Validar a Conexão
+No Terminal 1 (Ativar o receptor no nó atacante):
+
+sudo docker exec -it clab-lab-ebpf-atacante python3 /src/subscriber.py
+# Conectar e aguardar mensagem
+```
+
+```
+No Terminal 2 (Ativar o emissor no nó sensor):
+
+sudo docker exec -it clab-lab-ebpf-sensor python3 /src/sensor_teste.py
+```
+
+--- 
+
+---
+
+
+---
 
 Passo 2: Terminal A -  Monitoramento eBPF (ddos.py)
 
