@@ -42,12 +42,6 @@ sudo containerlab deploy -t topologia.yml
 
 
 ```
-# Reiniciar MQTT
-sudo docker exec clab-lab-ebpf-gateway pkill mosquitto || true
-sudo docker exec clab-lab-ebpf-gateway mosquitto -d -c /lab/mosquitto.conf
-```
-
-```
 # Executar e Validar a Conexão
 No Terminal 1 (Ativar o receptor no nó atacante):
 
