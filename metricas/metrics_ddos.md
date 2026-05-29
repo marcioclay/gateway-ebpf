@@ -46,7 +46,7 @@ sudo docker exec -it clab-lab-ebpf-atacante python3 /src/subscriber.py
 ```
 No Terminal 2 (Ativar o emissor no nó sensor):
 
-sudo docker exec -it clab-lab-ebpf-sensor python3 /src/sensor_teste.py
+sudo docker exec -it clab-lab-ebpf-sensor python3 /src/sensor.py
 ```
 
 --- 
