@@ -10,6 +10,20 @@
 
 Este guia orienta a validação do protótipo através do estabelecimento de tráfego legítimo, simulação de ataque de inundação e extração de metricas diretamente do plano de dados.
 
+### 2. Métricas para Ataques Slow DoS (Camada de Aplicação / SlowITe)
+* **2.1. Contagem de Conexões TCP Simultâneas por IP**
+    * *Descrição:* Quantificação de sockets abertos e mantidos ativos por um único endereço de origem.
+    * *Aplicação:* Detecção de exaustão de *slots* limitados no Broker MQTT (*max_connections*).
+* **2.2. Persistência e Tempo de Vida da Conexão (*Timestamps / Last Seen*)**
+    * *Descrição:* Registo do tempo decorrido desde a abertura do socket sem que haja atividade útil de transmissão.
+    * *Aplicação:* Identificação de sessões dormentes ou conexões presas intencionalmente.
+* **2.3. Tamanho Médio dos Pacotes (*Payload Anomaly*)**
+    * *Descrição:* Análise do tamanho em bytes das mensagens recebidas na camada de transporte/aplicação.
+    * *Aplicação:* Detecção de anomalias por envio de pacotes truncados, incompletos ou contendo apenas bytes de controlo (ex: apenas o byte inicial `\x10`).
+* **2.4. Densidade e Frequência de Pacotes ao Longo do Tempo**
+    * *Descrição:* Avaliação do intervalo de tempo entre as transmissões dentro de uma mesma sessão TCP.
+    * *Aplicação:* Identificação de comportamento silencioso (baixa taxa de transferência), projetado para contornar os mecanismos de *timeout* padrão da aplicação.
+
 ### Índice de Testes
 
 Ao reiniciar o laboratório o Kernel do Linux é completamente zerado, isto significa que os contêineres foram parados e o programa eBPF foi apagado da memória. Caso esse seja o caso, siga essa etapas: 
