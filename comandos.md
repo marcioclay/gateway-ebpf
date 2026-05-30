@@ -242,5 +242,10 @@ Ver total de memória RAM da VM: free -h
 echo "max_connections 200" >> mosquitto.conf
 ```
 
+#### Reiniciar container
+
+```
+sudo docker restart clab-lab-ebpf-gateway
+```
 
 
