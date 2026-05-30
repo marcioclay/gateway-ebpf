@@ -236,4 +236,11 @@ Ver total de memória RAM da VM: free -h
 
 --- 
 
+#### Limita numero de conexões do MQTT
+
+```
+echo "max_connections 200" >> mosquitto.conf
+```
+
+
 
