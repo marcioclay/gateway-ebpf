@@ -10,6 +10,14 @@
 
 Este guia orienta a validação do protótipo através do estabelecimento de tráfego legítimo, simulação de ataque de inundação e extração de metricas diretamente do plano de dados.
 
+## 1. Métricas para Ataques DDoS (Volumétricos)
+* **1.1. Taxa de Pacotes por Segundo (PPS - *Packets Per Second*)**
+    * *Descrição:* Monitorização de picos súbitos no volume de pacotes recebidos pela interface de rede.
+    * *Aplicação:* Identificação de saturação de infraestrutura e ataques de inundação (Flooding).
+* **1.2. Consumo de Banda (Mbps / Gbps)**
+    * *Descrição:* Volume total de tráfego de dados por unidade de tempo.
+    * *Aplicação:* Análise de esgotamento do link de comunicação do gateway.
+
 ### Índice de Testes
 
 Ao reiniciar o laboratório o Kernel do Linux é completamente zerado, isto significa que os contêineres foram parados e o programa eBPF foi apagado da memória. Caso esse seja o caso, siga essa etapas: 
