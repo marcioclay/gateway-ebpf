@@ -11,7 +11,7 @@
 Este guia orienta a validação do protótipo através do estabelecimento de tráfego legítimo, simulação de ataque de inundação e extração de metricas diretamente do plano de dados.
 
 ### 2. Métricas para Ataques Slow DoS (Camada de Aplicação / SlowITe)
-* **2.1. Contagem de Conexões TCP Simultâneas por IP**
+* **2.1. Contagem de Conexões TCP Simultâneas por IP**(INSERIR sockops)
     * *Descrição:* Quantificação de sockets abertos e mantidos ativos por um único endereço de origem.
     * *Aplicação:* Detecção de exaustão de *slots* limitados no Broker MQTT (*max_connections*).
 * **2.2. Persistência e Tempo de Vida da Conexão (*Timestamps / Last Seen*)**
