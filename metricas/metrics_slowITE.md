@@ -115,4 +115,18 @@ sudo docker exec -it clab-lab-ebpf-atacante python3 /src/ataque_slow.py
 ```
 docker exec -it clab-lab-ebpf-gateway /bin/bash
 ```
-O mosquitto.conf está em /etc/mosquitto
+O mosquitto.conf está em /etc/mosquitto 
+
+Inserir dados de conexões
+```
+echo -e "max_connections 1000\nglobal_max_clients 1000" > /etc/mosquitto/conf.d/testes.conf
+```
+
+```
+kill -HUP $(cat /run/mosquitto/mosquitto.pid)
+```
+Ou, se estiver rodando como serviço tradicional:
+
+```
+service mosquitto restart
+```
