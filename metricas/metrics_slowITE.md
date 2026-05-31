@@ -25,7 +25,9 @@ Este guia orienta a validação do protótipo através do estabelecimento de tr�
     * *Aplicação:* Identificação de comportamento silencioso (baixa taxa de transferência), projetado para contornar os mecanismos de *timeout* padrão da aplicação.
 
 	  ```
-		" O protótipo atua na camada de driver (XDP). Ele identifique a anomalia de payload e frequência do Slow DoS, mas é incapaz de validar se a aplicação (MQTT) manteve os sockets abertos (Métrica 2.1). Isso comprova a necessidade de acoplar ganchos na camada de transporte (sockops).
+		" O protótipo atua na camada de driver (XDP). Ele identifique a anomalia de payload e frequência do Slow DoS,
+    	mas é incapaz de validar se a aplicação (MQTT) manteve os sockets abertos (Métrica 2.1).
+    	Isso comprova a necessidade de acoplar ganchos na camada de transporte (sockops).
       ```
 
 ### Índice de Testes
