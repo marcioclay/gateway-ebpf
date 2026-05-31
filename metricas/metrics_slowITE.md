@@ -108,5 +108,11 @@ Terminal C - Ativar ataque slowITE no atacante
 ```
 sudo docker exec -it clab-lab-ebpf-atacante python3 /src/ataque_slow.py
 ```
+--- 
 
-
+### Resolução de problemas MQTT
+#### Acesse o terminal do gateway:
+```
+docker exec -it clab-lab-ebpf-gateway /bin/bash
+```
+O mosquitto.conf está em /etc/mosquitto
