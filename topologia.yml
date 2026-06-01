@@ -18,12 +18,17 @@ topology:
       kind: linux
       image: ebpf-host:latest  
       binds:
+        - /lib/modules:/lib/modules:ro
+        - /usr/src:/usr/src:ro
+        - /etc/os-release:/etc/os-release:ro
+        - /boot:/boot:ro
         - /sys/fs/bpf:/sys/fs/bpf:shared
         - ./:/lab/             
       exec:
         - ip addr add 10.0.0.1/24 dev eth1
         - ip link set eth1 up
-        
+      
+          
 
     # --- ATACANTE  ---
     atacante:
@@ -33,7 +38,7 @@ topology:
         - ./src:/src           
       exec:
         - apt-get update
-        - apt-get install -y iproute2 iputils-ping  hping3
+        - apt-get install -y iproute2 iputils-ping hping3
         - ip addr add 10.0.0.10/24 dev eth1
         - ip link set eth1 up
         
@@ -46,7 +51,7 @@ topology:
         - ./src:/src           
       exec:
         - apt-get update
-        - apt-get install -y iproute2 iputils-ping 
+        - apt-get install -y iproute2  iputils-ping
         - ip addr add 10.0.0.20/24 dev eth1
         - ip link set eth1 up
         
