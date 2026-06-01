@@ -1,135 +1,133 @@
 #!/usr/bin/env python3
-import os
-import sys
-import time
-import json
 import subprocess
-import socket
+import json
+import time
 import struct
+import socket
 
-# Caminhos dos mapas pinados pelo bpftool
-MAP_PROTO_STATS = "/sys/fs/bpf/my_lab/proto_stats"
-MAP_TCP_SESSIONS = "/sys/fs/bpf/my_lab/tcp_sessions"
+# Nomes dos mapas definidos no seu xdp_monitor.c
+MAP_PROTO = "proto_stats"
+MAP_SESS = "tcp_sessions"
 
-def int_to_ip(ip_int):
-    """Converte o inteiro do IP vindo do eBPF para string legível (A.B.C.D)"""
+def get_map_id(name):
+    """Descobre o ID do mapa automaticamente pelo nome"""
     try:
-        # Trata o Endianness (geralmente Little Endian na leitura do bpftool em x86)
-        return socket.inet_ntoa(struct.pack("<I", ip_int))
+        out = subprocess.check_output(["bpftool", "map", "show", "-j"], stderr=subprocess.DEVNULL)
+        maps = json.loads(out)
+        for m in maps:
+            if m.get("name") == name:
+                return m.get("id")
     except Exception:
-        return "Desconhecido"
+        pass
+    return None
 
-def ler_mapa_bpf(caminho_mapa):
-    """Executa o bpftool para extrair o mapa estruturado em formato JSON"""
-    if not os.path.exists(caminho_mapa):
-        return None
+def dump_map(map_id):
+    """Lê os dados brutos do mapa em formato JSON"""
+    if not map_id: return []
     try:
-        cmd = ["bpftool", "-j", "map", "dump", "pinned", caminho_mapa]
-        resultado = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        return json.loads(resultado.stdout)
-    except Exception as e:
-        return None
+        out = subprocess.check_output(["bpftool", "map", "dump", "id", str(map_id), "-j"], stderr=subprocess.DEVNULL)
+        return json.loads(out)
+    except Exception:
+        return []
+
+def parse_metrics(value_list):
+    """Converte os bytes brutos do kernel para inteiros (packet_count e byte_count)"""
+    b = bytearray()
+    for v in value_list:
+        b.append(int(v, 16) if isinstance(v, str) else v)
+    
+    # A estrutura tem 24 bytes: 8 (pkts) + 8 (bytes) + 8 (last_seen)
+    if len(b) >= 16:
+        # Extrai os dois primeiros blocos de 64 bits (unsigned long long)
+        return struct.unpack("<QQ", b[0:16])
+    return 0, 0
+
+def parse_key_idx(key_list):
+    """Extrai o índice da chave (0 ou 1)"""
+    b = bytearray([int(k, 16) if isinstance(k, str) else k for k in key_list])
+    if len(b) >= 4:
+        return struct.unpack("<I", b[0:4])[0]
+    return -1
+
+def parse_ip(key_list):
+    """Converte a chave IP de bytes para string legível (ex: 10.0.0.1)"""
+    b = bytearray([int(k, 16) if isinstance(k, str) else k for k in key_list])
+    if len(b) >= 4:
+        return socket.inet_ntoa(b[0:4])
+    return "0.0.0.0"
 
 def main():
-    # Dicionários para armazenar o estado anterior e calcular taxas por segundo (Delta)
-    prev_global = {}
-    prev_hosts = {}
-    last_time = time.time()
-
-    print("=== Aguardando inicialização dos mapas eBPF em /sys/fs/bpf/my_lab/... ===")
+    print("[*] Conectando aos mapas eBPF já carregados no Gateway...")
     
+    id_proto = get_map_id(MAP_PROTO)
+    id_sess = get_map_id(MAP_SESS)
+
+    # Se não achar pelos nomes, tenta usar o ID 55 que você informou como fallback
+    if not id_proto and not id_sess:
+        print("[-] Mapas não encontrados pelo nome. Tentando ler ID 55...")
+        id_proto = 55 
+
     while True:
         try:
-            time.sleep(1.0)
-            now_time = time.time()
-            dt = now_time - last_time
-            if dt <= 0:
-                continue
-            
-            stats_globais = ler_mapa_bpf(MAP_PROTO_STATS)
-            stats_hosts = ler_mapa_bpf(MAP_TCP_SESSIONS)
-            
-            if stats_globais is None:
-                continue
+            print("\033c", end="") # Limpa a tela
+            agora = time.strftime("%H:%M:%S")
+            print("="*65)
+            print("  DASHBOARD MQTT GATEWAY (Leitura Direta)")
+            print("="*65)
+            print(f"  Atualizado em: {agora}\n")
 
-            # Limpa a tela para o efeito de Dashboard em tempo real
-            os.system('clear')
-            print("=========================================================================")
-            print("            DASHBOARD DE MONITORAMENTO IOT - GATEWAY eBPF/XDP            ")
-            print("=========================================================================")
-            print(f"Tempo de Execução: {time.strftime('%H:%M:%S')} | Janela: {dt:.2f}s\n")
+            # --- 1. LER VOLUMETRIA GLOBAL (PROTO_STATS) ---
+            dados_proto = dump_map(id_proto)
+            pkts_udp = bytes_udp = pkts_tcp = bytes_tcp = 0
 
-            # --- 1. PROCESSAMENTO DE MÉTRICAS GLOBAIS (DDoS Volumétrico) ---
-            print("[ MÁSTRICAS GLOBAIS DO PLANO DE DADOS ]")
-            print(f"{'Protocolo/Serviço':<25} | {'Pacotes Totais':<15} | {'Taxa (PPS)':<12} | {'Banda (Mbps)':<12}")
-            print("-" * 73)
+            for item in dados_proto:
+                key = parse_key_idx(item['key'])
+                pkts, bts = parse_metrics(item['value'])
+                if key == 0:   # Key 0 = UDP
+                    pkts_udp, bytes_udp = pkts, bts
+                elif key == 1: # Key 1 = TCP 1883
+                    pkts_tcp, bytes_tcp = pkts, bts
 
-            for item in stats_globais:
-                key = item.get("key")
-                val = item.get("value", {})
-                
-                pkt_total = val.get("packet_count", 0)
-                bytes_total = val.get("byte_count", 0)
-                
-                label = "UDP (DDoS Flood Target)" if key == 0 else "TCP (Porta 1883 - MQTT)"
-                
-                # Cálculos de taxa (Delta)
-                old_pkt, old_bytes = prev_global.get(key, (pkt_total, bytes_total))
-                pps = (pkt_total - old_pkt) / dt
-                mbps = (((bytes_total - old_bytes) * 8) / 1024 / 1024) / dt
-                
-                prev_global[key] = (pkt_total, bytes_total)
-                
-                print(f"{label:<25} | {pkt_total:<15} | {pps:<12.2f} | {mbps:<12.4f}")
-            
-            print("\n" + "="*73 + "\n")
-
-            # --- 2. PROCESSAMENTO COMPORTAMENTAL POR HOST (Detecção de Slow DoS) ---
-            print("[ ANÁLISE COMPORTAMENTAL DE SESSÕES TCP (PORTA 1883) ]")
-            print(f"{'IP Origem':<16} | {'Pacotes':<8} | {'Volume (Bytes)':<15} | {'Tam. Médio':<10} | {'Status/Alerta':<15}")
-            print("-" * 73)
-
-            if not stats_hosts:
-                print("Nenhuma sessão TCP ativa mapeada pelo Kernel no momento.")
+            print(" [CENÁRIO 1: DDoS VOLUMÉTRICO - Flood UDP]")
+            if pkts_udp > 0:
+                print(f"   -> Total Pacotes : {pkts_udp}")
+                print(f"   -> Banda Gasta   : {bytes_udp} bytes")
             else:
-                for host in stats_hosts:
-                    raw_ip = host.get("key")
-                    # No JSON do bpftool, chaves de mapas Hash podem vir como inteiros ou sub-objetos
-                    ip_int = int(raw_ip) if isinstance(raw_ip, (int, str)) else raw_ip.get("value", 0)
-                    
-                    ip_str = int_to_ip(ip_int)
-                    val = host.get("value", {})
-                    
-                    pkts = val.get("packet_count", 0)
-                    bytes_cnt = val.get("byte_count", 0)
-                    
-                    # Ignora IPs zerados de controle
-                    if ip_str == "0.0.0.0":
-                        continue
+                print("   -> Sem tráfego detectado.")
 
-                    # Métrica de assinatura: Tamanho médio do pacote (Payload + Headers)
-                    avg_packet_size = bytes_cnt / pkts if pkts > 0 else 0
-                    
-                    # HEURÍSTICA DE DETECÇÃO (Nível de Dissertação):
-                    # Se o host enviou pacotes, mas o tamanho médio é muito baixo (ex: < 70 bytes,
-                    # o que significa apenas a troca de flags TCP SYN/ACK/FIN sem payload MQTT real)
-                    # E mantém a atividade insistente, ele entra como suspeito de Slow DoS.
-                    status = "LEGÍTIMO"
-                    if pkts > 5 and avg_packet_size < 74:
-                        status = "⚠️ SUSPEITO SLOW"
-                    elif pps > 5000: # Se um único IP estourar pacotes sozinho
-                        status = "🚨 ATACANTE DDoS"
+            print("\n" + "-"*65 + "\n")
 
-                    print(f"{ip_str:<16} | {pkts:<8} | {bytes_cnt:<15} | {avg_packet_size:<10.1f} | {status:<15}")
+            print(" [CENÁRIO 2: SLOW DoS - Global TCP/1883]")
+            if pkts_tcp > 0:
+                print(f"   -> Total Pacotes : {pkts_tcp}")
+                print(f"   -> Banda Gasta   : {bytes_tcp} bytes")
+            else:
+                print("   -> Sem tráfego detectado.")
 
-            last_time = now_time
+            # --- 2. LER COMPORTAMENTO POR HOST (TCP_SESSIONS) ---
+            print("\n" + "-"*65)
+            print("    Sessões TCP Ativas por IP de Origem:")
+            
+            if id_sess:
+                dados_sess = dump_map(id_sess)
+                if not dados_sess:
+                    print("      Nenhuma sessão identificada no momento.")
+                for item in dados_sess:
+                    ip_str = parse_ip(item['key'])
+                    pkts, bts = parse_metrics(item['value'])
+                    print(f"      - IP: {ip_str:<15} | Pkts: {pkts:<6} | Bytes: {bts:<8}")
+            else:
+                print("      (Mapa de sessões comportamentais não localizado)")
+
+            print("\n" + "="*65)
+            time.sleep(5) # Atualiza a cada 1 segundo (igual ao watch -n 1)
 
         except KeyboardInterrupt:
-            print("\nEncerrando Dashboard...")
-            sys.exit(0)
+            print("\n[*] Leitura interrompida pelo usuário.")
+            break
         except Exception as e:
-            print(f"Erro no loop do Dashboard: {e}")
+            print(f"[-] Erro na leitura dos mapas: {e}")
             time.sleep(2)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
