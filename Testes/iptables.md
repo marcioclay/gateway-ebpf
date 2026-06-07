@@ -25,7 +25,7 @@ Passo A: Teste com iptables (XDP Desligado)
 - Certifique-se de que o XDP está desligado: 
 
 ```
-ip link set dev eth1 xdpgeneric off
+sudo docker exec -it clab-lab-ebpf-gateway ip link set dev eth1 xdpgeneric off
 ```
 
 - Aplique as regras do iptables.
