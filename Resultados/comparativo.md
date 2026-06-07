@@ -19,6 +19,13 @@ O tráfego MQTT padrão possui uma assinatura comportamental clara:
 * **DDoS Volumétrico (Flood UDP):** Caracterizado por um pico anômalo de tráfego UDP (Protocolo 17) não requisitado pela aplicação. A identificação ocorre pelo estouro rápido dos limiares de taxa de pacotes por segundo (PPS) lidos no mapa global (`proto_stats`).
 * **Slow DoS (Exaustão TCP):** O atacante forja o comportamento de um sensor lento. A identificação ocorre via análise comportamental fina no mapa `tcp_sessions`: o IP de origem estabelece a conexão TCP (`1883`), mas a taxa de `byte_count` permanece criticamente baixa enquanto o delta de tempo (`last_seen`) se prolonga, indicando a intenção maliciosa de segurar o socket aberto no gateway.
 
+### C. Fundamentação de Detecção e Bloqueio (Slow DoS)
+
+A eficácia da mitigação de ataques de exaustão TCP, como o SlowITe, através de eBPF baseia-se na análise comportamental da sessão em oposição à inspeção profunda de pacotes (DPI). Em uma infraestrutura de gateway IoT, sensores legítimos realizam a transferência de telemetria (ex: pacotes PUBLISH do MQTT) em rajadas rápidas, resultando em um tamanho médio de pacote que supera consistentemente os 100 bytes de rede, considerando o encapsulamento.
+
+Em contrapartida, o atacante realiza o esgotamento dos sockets do gateway fragmentando intencionalmente a carga útil, enviando pacotes mínimos (ex: 1 byte de payload TCP, totalizando ~55 bytes no fio) em intervalos espaçados (ex: a cada 15 segundos) apenas para reiniciar os temporizadores (timers) do sistema operativo.
+
+O algoritmo XDP implementado extrai a assinatura deste ataque monitorizando a proporção entre o volume trafegado (byte_count) e o número de interações (packet_count) de uma mesma origem. Foi estipulada uma janela de observação (MIN_PKTS_CHECK = 50) e um limiar mínimo de viabilidade de dados (MIN_AVG_BYTES = 65 bytes). Se, após 50 pacotes enviados, o IP de origem mantiver uma média inferior a 65 bytes por pacote, fica comprovada a ausência de intenção de transmissão legítima, desencadeando o descarte sumário na placa de rede (XDP_DROP).
 ---
 
 ## 2. Comparativo Tecnológico: eBPF/XDP vs. iptables
