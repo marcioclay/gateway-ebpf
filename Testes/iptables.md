@@ -34,6 +34,11 @@ sudo docker exec -it clab-lab-ebpf-gateway ip link set dev eth1 xdpgeneric off
  docker exec -it clab-lab-ebpf-gateway bash
 ```
 ```
+# Instalar o iptables
+apt update && apt install -y iptables
+```
+
+```
 # Executar o script
 cd /lab
 ./regras_iptables.sh
