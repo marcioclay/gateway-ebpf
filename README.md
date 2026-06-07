@@ -191,6 +191,9 @@ Verifique se o lab está rodando:
 ```bash
 docker ps --filter "label=containerlab=gateway-ebpf"
 ```
+```
+docker ps --format "table {{.Names}}\t{{.Status}}" | grep clab
+```
 
 ---
 
