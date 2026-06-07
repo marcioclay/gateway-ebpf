@@ -1,3 +1,15 @@
+##  📊 Guia de Execução de Testes: Cenário Comparativo (Iptables)
+
+![Tcpdump](https://img.shields.io/badge/Tcpdump-network%20analysis-orange?style=flat-square&logo=wireshark)
+![Hping3](https://img.shields.io/badge/Hping3-packet%20crafting-red?style=flat-square&logo=linux)
+![DDoS](https://img.shields.io/badge/DDoS%20%26%20Slow-attack%20simulation-darkred?style=flat-square&logo=apache)
+![Cybersecurity](https://img.shields.io/badge/Cybersecurity-lab%20focus-blue?style=flat-square&logo=security)
+![IoT](https://img.shields.io/badge/IoT-connected%20devices-lightblue?style=flat-square&logo=internetofthings)
+
+
+Este guia orienta a validação do protótipo através do estabelecimento de tráfego legítimo, simulação de ataque de inundação e extração de metricas diretamente do plano de dados.
+
+
 ### Teste com iptables
    
 Configuração do Baseline de Defesa (iptables / Netfilter)
@@ -57,13 +69,24 @@ ip link set dev eth1 xdpgeneric off
 - No Gateway, abra o utilitário de sistema htop ou top e observe a % de CPU (especialmente a barra vermelha ou si - Soft Interrupts).
   Anote o valor médio (ex: 85%).
 
-- Pare o ataque e execute iptables -L -n -v. A coluna "pkts" e "bytes" ao lado das regras de DROP vai mostrar exatamente quantos pacotes o iptables conseguiu bloquear.
+- Pare o ataque e execute:
+  
+```
+# A coluna "pkts" e "bytes" ao lado das regras de DROP vai mostrar exatamente quantos pacotes o iptables conseguiu bloquear.
+   iptables -L -n -v
+```
+---
 
 Passo B: Teste com eBPF/XDP (iptables Zerado)
 
-Zere o iptables: iptables -F
+- Zere o iptables: 
 
-Carregue o seu programa XDP na interface 
+```
+iptables -F
+```
+
+- Carregue o seu programa XDP na interface 
+
 ```
 sudo docker exec -it clab-lab-ebpf-gateway ip link set dev eth1 xdpgeneric pinned /sys/fs/bpf/xdp_monitor_test
 ```
