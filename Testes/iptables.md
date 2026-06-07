@@ -35,6 +35,7 @@ sudo docker exec -it clab-lab-ebpf-gateway ip link set dev eth1 xdpgeneric off
 ```
 ```
 # Executar o script
+cd /lab
 ./regras_iptables.sh
 ```
 
