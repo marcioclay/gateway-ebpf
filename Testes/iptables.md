@@ -47,6 +47,9 @@ cd /lab
 - Inicie os seus ataques a partir do node atacante.
 
 - No Gateway, abra o utilitário de sistema htop ou top e observe a % de CPU. (especialmente a barra vermelha ou si - Soft Interrupts). Anote o valor médio (ex: 85%).
+  ```
+   top -b -n 20 -d 1 | grep "%Cpu" > cpu_iptables_ddos.txt
+  ```
 
 - Pare o ataque e execute:
    ```
@@ -68,8 +71,11 @@ cd /lab
 
 - Inicie os mesmos ataques a partir do node atacante.
 
-Abra o htop no Gateway e monitore a CPU.
-
+- Abra o htop ou top no Gateway e monitore a CPU.
+  ```
+   top -b -n 20 -d 1 | grep "%Cpu" > cpu_xdp_ddos.txt
+  ```
+  
 - Use o seu Dashboard
    ```
    # quantidade de pacotes bloqueados
