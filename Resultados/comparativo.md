@@ -26,6 +26,8 @@ A eficácia da mitigação de ataques de exaustão TCP, como o SlowITe, através
 Em contrapartida, o atacante realiza o esgotamento dos sockets do gateway fragmentando intencionalmente a carga útil, enviando pacotes mínimos (ex: 1 byte de payload TCP, totalizando ~55 bytes no fio) em intervalos espaçados (ex: a cada 15 segundos) apenas para reiniciar os temporizadores (timers) do sistema operativo.
 
 O algoritmo XDP implementado extrai a assinatura deste ataque monitorizando a proporção entre o volume trafegado (byte_count) e o número de interações (packet_count) de uma mesma origem. Foi estipulada uma janela de observação (MIN_PKTS_CHECK = 50) e um limiar mínimo de viabilidade de dados (MIN_AVG_BYTES = 65 bytes). Se, após 50 pacotes enviados, o IP de origem mantiver uma média inferior a 65 bytes por pacote, fica comprovada a ausência de intenção de transmissão legítima, desencadeando o descarte sumário na placa de rede (XDP_DROP).
+
+
 ---
 
 ## 2. Comparativo Tecnológico: eBPF/XDP vs. iptables
