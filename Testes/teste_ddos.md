@@ -64,6 +64,11 @@ sudo docker exec -it clab-lab-ebpf-sensor python3 /src/sensor.py
 
 Terminal A -  Janela de Observação
 
+```
+# Iniciar dashboard em um terminal
+docker exec -it clab-lab-ebpf-gateway python3 /lab/src/dashboard.py
+```
+
 Mapas - proto_stats e tcp_sessions
 
 ```
