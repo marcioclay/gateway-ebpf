@@ -63,7 +63,10 @@ Passo B: Teste com eBPF/XDP (iptables Zerado)
 
 Zere o iptables: iptables -F
 
-Carregue o seu programa XDP na interface (o comando ip link set dev eth1 xdpgeneric pinned... ).
+Carregue o seu programa XDP na interface 
+```
+sudo docker exec -it clab-lab-ebpf-gateway ip link set dev eth1 xdpgeneric pinned /sys/fs/bpf/xdp_monitor_test
+```
 
 Inicie os exatos mesmos ataques a partir do node atacante.
 
