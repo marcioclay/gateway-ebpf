@@ -251,14 +251,15 @@ Por que pinar? Pinar o programa em /sys/fs/bpf/ mantém o BPF Map ativo na memó
 Como o programa foi pinado, o bpftool cria um "atalho" para os seus mapas dentro do diretório /sys/fs/bpf/. Para ver as estatísticas dos ataques em tempo real:
 
 ```
-# Para ver os contadores de pacotes UDP (DDoS) e TCP (Slow DoS)
-sudo docker exec clab-gateway-ebpf-gateway bpftool map dump pinned /sys/fs/bpf/xdp_monitor_test/proto_stats
+# Para ver a volumetria global (DDoS e total da porta 1883):
+sudo docker exec -it clab-lab-ebpf-gateway bpftool map dump name proto_stats
 ```
 
 ```
-# Para ver o comportamento e IPs bloqueados/rastreados
-sudo docker exec clab-gateway-ebpf-gateway bpftool map dump pinned /sys/fs/bpf/xdp_monitor_t
+# Para ver a análise comportamental por IP (Slow DoS):
+sudo docker exec -it clab-lab-ebpf-gateway bpftool map dump name tcp_sessions
 ```
+
 
 
 ### 🧹 Limpeza
