@@ -19,7 +19,7 @@ Este protótipo apresenta o desenvolvimento de uma Sonda de Monitoramento de Seg
 
 - Observabilidade em Nível de Kernel: Implementação de um programa eBPF em C para inspeção de cabeçalhos e extração de metadados de tráfego em tempo real.
 
-- Análise de Fluxo na Borda: Uso do XDP como uma sonda de entrada para capturar estatísticas de rede antes da alocação de buffers de socket (sk_buff), permitindo uma medição fiel da carga de ataque.
+- Análise de Fluxo na Borda: capturar estatísticas de rede antes da alocação de buffers de socket (sk_buff), permitindo uma medição fiel da carga de ataque.
 - Orquestração de Cenário de Teste: 
 - Identificação de Vetores de Ataque:
   - Monitoramento Volumétrico (DDoS): Detecção de inundações UDP/TCP através de contadores de taxa de pacotes por IP.
@@ -29,6 +29,7 @@ Este protótipo apresenta o desenvolvimento de uma Sonda de Monitoramento de Seg
   Ajustes Técnicos no Protótipo:
 requisito "detecção", o fluxo de trabalho do laboratório será focado em:
 
+## Ajustar drop foi inserido retirar do codigo?
 1. Ação XDP: O programa eBPF utilizará exclusivamente o retorno XDP_PASS. Isso garante que todos os pacotes (benignos ou maliciosos) continuem sua jornada para o Broker, mas não antes de serem contabilizados e analisados pela lógica de detecção.
 2. Métricas de Desempenho: o foco será o Overhead de Observabilidade. Monitorar 100% do tráfego sob ataque pesado sem degradar a CPU do Gateway. 
 
