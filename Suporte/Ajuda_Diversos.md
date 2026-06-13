@@ -1,3 +1,35 @@
+📊 Guia de Suporte 
+
+
+Este guia orienta a validação do protótipo através do estabelecimento de tráfego legítimo, simulação de ataque de inundação e extração de metricas diretamente do plano de dados.
+
+## 1. Visualização dos mapas utilizados para observação no xdp:
+
+Mapas - proto_stats e tcp_sessions
+Após reiniciar o containerlab o id dos mapas é alterado. O dashboard já mostra os dados retirados dos mapas, porém caso queira ver o mapas
+siga as orientações abaixo.
+
+```
+# Deixe este comando rodando na tela. Ele vai atualizar sozinho.
+watch -n 1 sudo docker exec -it clab-lab-ebpf-gateway bpftool map dump id 55
+```
+
+
+#### Caso tenha reiniciado será necessário atualizar o id do mapa.
+```
+sudo docker exec -it clab-lab-ebpf-gateway bpftool map list
+```
+```
+# Mensagem na tela
+120: hash  name proto_stats  flags 0x0
+	key 4B  value 8B  max_entries 10  memlock 4096B
+121: hash  name ip_stats     flags 0x0
+	key 4B  value 16B  max_entries 1024  memlock 8192B
+# Procure pelos nomes dos seus mapas (como proto_stats).
+# O número que aparece logo no início da linha (ex: 120, 121) é o seu novo ID.
+```
+---
+
 
 | Dimensão / Métrica de Detecção | Tipo de Ataque Alvo | Mapa `tcp_session` (Micro / Por IP) | Mapa `proto_stats` (Macro / Global) | Mecanismo de Funcionamento / Limitação no XDP |
 | :--- | :--- | :--- | :--- | :--- |
