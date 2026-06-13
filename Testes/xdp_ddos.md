@@ -1,5 +1,5 @@
 
-##  📊 Guia de Execução de Testes: Cenário 1 (DDoS Volumétrico)
+##  📊 Guia de Execução de Testes: Cenário 1 (DoS Volumétrico)
 
 ![Tcpdump](https://img.shields.io/badge/Tcpdump-network%20analysis-orange?style=flat-square&logo=wireshark)
 ![Hping3](https://img.shields.io/badge/Hping3-packet%20crafting-red?style=flat-square&logo=linux)
@@ -10,7 +10,7 @@
 
 Este guia orienta a validação do protótipo através do estabelecimento de tráfego legítimo, simulação de ataque de inundação e extração de metricas diretamente do plano de dados.
 
-### 1. Métricas para Ataques DDoS (Volumétricos)
+### 1. Métricas para Ataques DoS (Volumétricos)
 * **1.1. Taxa de Pacotes por Segundo (PPS - *Packets Per Second*)**
     * *Descrição:* Monitorização de picos súbitos no volume de pacotes recebidos pela interface de rede.
     * *Aplicação:* Identificação de saturação de infraestrutura e ataques de inundação (Flooding).
