@@ -45,13 +45,14 @@ sudo docker exec -it clab-lab-ebpf-gateway ip link set dev eth1 xdpgeneric pinne
 Terminal A -  Janela de Observação
 
 ```
-# Iniciar dashboard em um terminal
+# Iniciar dashboard em um terminal - exibir informações dos mapas xdp.
 docker exec -it clab-lab-ebpf-gateway python3 /lab/src/dashboard.py
 ```
 
 Terminal B - Ativar ataque Dos no atacante
 
 ```
+# Será utilizado hping3
 sudo docker exec -it clab-lab-ebpf-atacante hping3 --udp -p 1883 --flood 10.0.0.1
 ```
 
