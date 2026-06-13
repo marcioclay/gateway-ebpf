@@ -130,8 +130,6 @@ B. Observar os dados extraídos pelo XDP (Leitura Nativa dos Mapas):
 # Ver a Volumetria Global (DDoS UDP vs Tráfego TCP na porta 1883)
 sudo docker exec -it clab-lab-ebpf-gateway bpftool map dump name proto_stats
 ```
-
-# Ver o Comportamento de Sessões por IP (Bloqueio Slow DoS)
 ```
 sudo docker exec -it clab-lab-ebpf-gateway bpftool map dump name tcp_sessions
 ```
@@ -139,7 +137,7 @@ sudo docker exec -it clab-lab-ebpf-gateway bpftool map dump name tcp_sessions
 C. Visualizar via Dashboard :
 
 ```
-# Executa a aplicação de monitoramento que traduz os mapas BPF em tempo real
+# monitoramento que traduz os mapas BPF em tempo real
 sudo docker exec -it clab-lab-ebpf-gateway python3 /lab/src/dashboard.py
 ```
 
