@@ -40,27 +40,7 @@ sudo docker exec -it clab-lab-ebpf-gateway bpftool prog load /lab/xdp_monitor.o 
 sudo docker exec -it clab-lab-ebpf-gateway ip link set dev eth1 xdpgeneric pinned /sys/fs/bpf/xdp_monitor_test
 ```
 
-### Passo 1: Habilitar conexões e testes MQTT - Talvez não seja NECESSARIO - RETIRAR?
-
-
-```
-# Executar e Validar a Conexão
-No Terminal 1 (Ativar o receptor no nó atacante):
-
-sudo docker exec -it clab-lab-ebpf-atacante python3 /src/subscriber.py
-# Conectar e aguardar mensagem
-```
-
-```
-No Terminal 2 (Ativar o emissor no nó sensor):
-
-sudo docker exec -it clab-lab-ebpf-sensor python3 /src/sensor.py
-```
-
-
----
-
-### Passo 2: Ataque DDos
+### Passo 1: Ataque Dos
 
 Terminal A -  Janela de Observação
 
@@ -69,46 +49,10 @@ Terminal A -  Janela de Observação
 docker exec -it clab-lab-ebpf-gateway python3 /lab/src/dashboard.py
 ```
 
-Mapas - proto_stats e tcp_sessions
-
-```
-# Deixe este comando rodando na tela. Ele vai atualizar sozinho.
-watch -n 1 sudo docker exec -it clab-lab-ebpf-gateway bpftool map dump id 55
-```
-
-
-#### Caso tenha reiniciado será necessário atualizar o id do mapa.
-```
-sudo docker exec -it clab-lab-ebpf-gateway bpftool map list
-```
-```
-# Mensagem na tela
-120: hash  name proto_stats  flags 0x0
-	key 4B  value 8B  max_entries 10  memlock 4096B
-121: hash  name ip_stats     flags 0x0
-	key 4B  value 16B  max_entries 1024  memlock 8192B
-# Procure pelos nomes dos seus mapas (como proto_stats).
-# O número que aparece logo no início da linha (ex: 120, 121) é o seu novo ID.
-```
-
-Terminal B - Ativar sensor legítimo - nó sensor
-
-```
-sudo docker exec -it clab-lab-ebpf-sensor python3 /src/sensor.py
-```
-
-Terminal C - Ativar ataque DDos no atacante
+Terminal B - Ativar ataque Dos no atacante
 
 ```
 sudo docker exec -it clab-lab-ebpf-atacante hping3 --udp -p 1883 --flood 10.0.0.1
 ```
-```
-# Mostra o staus de cpu
-sudo docker stats clab-lab-ebpf-gateway clab-lab-ebpf-atacante
-```
-#### Observação: "Em ambientes virtualizados (Containerlab/Docker), a taxa de injeção de pacotes via software (veth) gera um gargalo no próprio nó atacante (exibindo consumo de até 180% de CPU para a geração do tráfego malicioso). Devido à eficiência da pilha de rede do Linux no descarte de pacotes UDP direcionados a portas fechadas, o nó Gateway consegue processar o volume gerado em modo XDP_PASS sem atingir a exaustão de recursos."
 
-| CONTAINER ID |            NAME          | CPU % | MEM USAGE / LIMIT   | MEM % | NET I/O       | BLOCK I/O       | PIDS |
-| b235ea9d8da8 | clab-lab-ebpf-gateway    | 0.05% | 8.086MiB / 2.832GiB | 0.28% | 14.4MB / 61kB | 12.6MB / 41.8MB | 2 |
-| ee11dc9f8119 | clab-lab-ebpf-atacante | 185.94% | 46.23MiB / 2.832GiB | 1.59% | 152MB / 377kB | 6.35MB / 624MB | 2 | 
 
