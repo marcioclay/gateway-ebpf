@@ -40,7 +40,7 @@ sudo docker exec -it clab-lab-ebpf-gateway bpftool prog load /lab/xdp_monitor.o 
 sudo docker exec -it clab-lab-ebpf-gateway ip link set dev eth1 xdpgeneric pinned /sys/fs/bpf/xdp_monitor_test
 ```
 
-### Passo 1: Habilitar conexões e testes MQTT
+### Passo 1: Habilitar conexões e testes MQTT - Talvez não seja NECESSARIO - RETIRAR?
 
 
 ```
